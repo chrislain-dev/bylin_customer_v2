@@ -1,141 +1,133 @@
-<template>
-    <transition name="scale-fade" appear>
-        <div class="w-full h-[100vh] flex bg-white overflow-hidden">
-            <!-- Left Side - Fashion Image -->
-            <div class="hidden md:flex md:w-1/2 relative overflow-hidden">
-                <div class="absolute inset-0 z-10"></div>
-                <img src="@/assets/images/auth.webp" alt="Fashion"
-                    class="w-full h-full object-cover object-top transform hover:scale-105 transition-transform duration-500" />
-            </div>
-
-            <!-- Right Side - Auth Form -->
-            <div class="w-full md:w-1/2 flex flex-col relative bg-indigo-700">
-                <!-- Content Container -->
-                <div class="flex-1 flex items-center justify-center p-8 md:p-12">
-                    <div class="max-w-md w-full">
-                        <div class="text-center mb-8">
-                            <transition name="bounce" appear>
-                                <div class="inline-flex items-center justify-center mb-4">
-                                    <router-link to="/">
-                                        <img src="/images/logo-white.png" alt="bylin logo"
-                                            class="w-48 h-48 object-contain" />
-                                    </router-link>
-                                </div>
-                            </transition>
-                            <h1 class="text-2xl font-bold text-gray-300 mb-2">
-                                Mot de passe oublié ?
-                            </h1>
-                            <p class="text-gray-900">Entrez votre email pour recevoir un lien de réinitialisation.</p>
-                        </div>
-
-                        <form @submit.prevent="handleForgotPassword" class="space-y-6">
-                            <UInput v-model="email" type="email" placeholder="Adresse mail" autocomplete="email"
-                                autofocus size="xl" :ui="{
-                                    base: 'w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-white focus:border-white outline-none transition-all duration-200 bg-white',
-                                    leading: { padding: { xl: 'pl-12' } }
-                                }" :color="emailError ? 'red' : 'white'">
-                                <template #leading>
-                                    <div
-                                        class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                                        <UIcon name="i-heroicons-envelope" class="w-5 h-5" />
-                                    </div>
-                                </template>
-                            </UInput>
-
-                            <transition name="slide-down">
-                                <p v-if="emailError" class="text-red-500 text-sm flex items-center gap-2">
-                                    <UIcon name="i-heroicons-exclamation-circle" class="w-4 h-4" />
-                                    {{ emailError }}
-                                </p>
-                            </transition>
-
-                            <transition name="slide-down">
-                                <p v-if="message"
-                                    class="text-green-400 text-sm flex items-center gap-2 bg-green-900/20 p-3 rounded border border-green-500/30">
-                                    <UIcon name="i-heroicons-check-circle" class="w-5 h-5 flex-shrink-0" />
-                                    {{ message }}
-                                </p>
-                            </transition>
-
-                            <transition name="slide-down">
-                                <p v-if="error" class="text-red-500 text-sm flex items-center gap-2">
-                                    <UIcon name="i-heroicons-exclamation-circle" class="w-4 h-4" />
-                                    {{ error }}
-                                </p>
-                            </transition>
-
-                            <UButton type="submit" :disabled="!email || !!emailError || isLoading" :loading="isLoading"
-                                block size="xl" color="white" variant="solid"
-                                class="hover:bg-indigo-700 hover:text-white hover:border transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl text-black font-medium">
-                                Envoyer le lien
-                            </UButton>
-                        </form>
-
-                        <div class="text-center mt-6">
-                            <p class="text-gray-200 text-sm">
-                                <router-link to="/auth/login"
-                                    class="text-white hover:text-black hover:underline font-medium transition-colors flex items-center justify-center gap-2">
-                                    <UIcon name="i-heroicons-arrow-left" class="w-4 h-4" />
-                                    Retour à la connexion
-                                </router-link>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </transition>
-</template>
-
+<!-- pages/auth/forgot-password.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-
 definePageMeta({
-    layout: false
+      layout: 'auth',
+      sanctum: {
+            excluded: true,
+      }
 })
 
-const authStore = useAuthStore()
+const toast = useToast()
+const client = useSanctumClient()
 
 const email = ref('')
-const error = ref('')
-const message = ref('')
-const emailError = ref('')
-const isLoading = ref(false)
+const loading = ref(false)
+const emailSent = ref(false)
 
-const handleForgotPassword = async () => {
-    error.value = ''
-    message.value = ''
-    emailError.value = ''
+async function handleSendResetLink() {
+      if (!email.value) {
+            toast.add({
+                  title: 'Email requis',
+                  description: 'Veuillez entrer votre adresse email.',
+                  color: 'warning',
+                  icon: 'i-heroicons-exclamation-triangle'
+            })
+            return
+      }
 
-    if (!email.value || !email.value.includes('@')) {
-        emailError.value = 'Veuillez entrer une adresse mail valide.'
-        return
-    }
+      loading.value = true
 
-    try {
-        isLoading.value = true
-        const { data, error: apiError } = await authStore.forgotPassword(email.value)
+      try {
+            await client('/api/v1/auth/customer/forgot-password', {
+                  method: 'POST',
+                  body: { email: email.value }
+            })
 
-        if (apiError.value) {
-            throw apiError.value
-        }
+            emailSent.value = true
 
-        message.value = 'Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.'
-        email.value = '' // Reset field on success
-    } catch (e: any) {
-        // On évite de révéler si l'email existe ou non pour la sécurité, sauf si c'est une erreur de validation
-        if (e.statusCode === 422) {
-            emailError.value = e.data?.message || 'Email invalide'
-        } else {
-            error.value = 'Une erreur est survenue. Veuillez réessayer plus tard.'
-        }
-    } finally {
-        isLoading.value = false
-    }
+            toast.add({
+                  title: 'Email envoyé',
+                  description: 'Si ce compte existe, vous recevrez un lien de réinitialisation.',
+                  color: 'success',
+                  icon: 'i-heroicons-check-circle'
+            })
+      } catch (error: any) {
+            const message = error?.data?.message || 'Une erreur est survenue'
+
+            toast.add({
+                  title: 'Erreur',
+                  description: message,
+                  color: 'error',
+                  icon: 'i-heroicons-x-circle'
+            })
+      } finally {
+            loading.value = false
+      }
 }
 </script>
 
-<style scoped>
-/* Animations globales dans main.css */
-</style>
+<template>
+      <div class="space-y-6">
+            <!-- Header -->
+            <div class="text-center">
+                  <div
+                        class="mx-auto w-16 h-16 bg-primary-100 dark:bg-primary-900/20 rounded-full flex items-center justify-center mb-4">
+                        <UIcon name="i-heroicons-key" class="w-8 h-8 text-primary-600 dark:text-primary-400" />
+                  </div>
+                  <h1 class="text-2xl font-bold text-white">
+                        Mot de passe oublié ?
+                  </h1>
+                  <p class="mt-2 text-sm text-gray-300">
+                        Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+                  </p>
+            </div>
+
+            <!-- Success State -->
+            <div v-if="emailSent"
+                  class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6 text-center space-y-4">
+                  <div class="flex justify-center">
+                        <UIcon name="i-heroicons-envelope-open" class="w-16 h-16 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                        <h3 class="font-semibold text-green-900 dark:text-green-300 text-lg">
+                              Vérifiez vos emails
+                        </h3>
+                        <p class="text-sm text-green-700 dark:text-green-400 mt-2">
+                              Un lien de réinitialisation a été envoyé à <strong>{{ email }}</strong>
+                        </p>
+                        <p class="text-xs text-green-600 dark:text-green-500 mt-3">
+                              Le lien expirera dans 60 minutes
+                        </p>
+                  </div>
+                  <UButton to="/auth/login" color="success" variant="outline" block size="lg">
+                        Retour à la connexion
+                  </UButton>
+            </div>
+
+            <!-- Form -->
+            <form v-else class="space-y-6" @submit.prevent="handleSendResetLink">
+                  <UFormField label="Adresse email" name="email" required>
+                        <UInput v-model="email" type="email" placeholder="vous@exemple.com" icon="i-heroicons-envelope"
+                              size="lg" class="w-full" autofocus required />
+                  </UFormField>
+
+                  <UButton type="submit" color="neutral" block size="lg" :loading="loading" class="cursor-pointer">
+                        Envoyer le lien de réinitialisation
+                  </UButton>
+
+                  <div class="text-center">
+                        <NuxtLink to="/auth/login"
+                              class="text-sm font-medium text-gray-200 inline-flex items-center gap-2">
+                              <UIcon name="i-heroicons-arrow-left" class="w-4 h-4" />
+                              Retour à la connexion
+                        </NuxtLink>
+                  </div>
+            </form>
+
+            <!-- Help Text -->
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <div class="flex gap-3">
+                        <UIcon name="i-heroicons-information-circle"
+                              class="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                        <div class="text-sm text-blue-700 dark:text-blue-300">
+                              <p class="font-medium mb-1">Vous ne recevez pas l'email ?</p>
+                              <ul class="list-disc list-inside space-y-1 text-blue-600 dark:text-blue-400">
+                                    <li>Vérifiez votre dossier spam</li>
+                                    <li>Assurez-vous que l'adresse email est correcte</li>
+                                    <li>Attendez quelques minutes avant de réessayer</li>
+                              </ul>
+                        </div>
+                  </div>
+            </div>
+      </div>
+</template>

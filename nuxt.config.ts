@@ -1,5 +1,5 @@
 export default defineNuxtConfig({
-  compatibilityDate: '2025-07-15',
+  compatibilityDate: "2025-07-15",
   future: {
     compatibilityVersion: 4,
   },
@@ -7,115 +7,190 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   modules: [
-    '@nuxt/fonts',
-    '@nuxt/ui',
-    '@pinia/nuxt',
-    '@vueuse/nuxt',
-    'nuxt-auth-sanctum',
-    'nuxt-vue3-google-signin',
-    '@nuxt/image'
+    "@nuxt/fonts",
+    "@nuxt/ui",
+    "@nuxt/icon",
+    "@pinia/nuxt",
+    "pinia-plugin-persistedstate/nuxt",
+    "@vueuse/nuxt",
+    "nuxt-auth-sanctum",
+    "nuxt-vue3-google-signin",
+    "@nuxt/image",
   ],
 
+  icon: {
+    provider: "server",
+    serverBundle: {
+      collections: ["heroicons", "lucide"],
+    },
+    clientBundle: {
+      scan: true,
+      icons: [
+        "heroicons:check-circle",
+        "heroicons:exclamation-triangle",
+        "heroicons:exclamation-circle",
+        "heroicons:trash",
+        "lucide:x",
+      ],
+    },
+  },
+
   googleSignIn: {
-    clientId: '104418748780-pqm4bevt1v6p3qag1e96tdlmn79jg5r1.apps.googleusercontent.com',
+    clientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID || "",
   },
 
   sanctum: {
-    baseUrl: '/api/v1',
-    mode: 'cookie',
+    baseUrl: process.env.NUXT_SANCTUM_BASE_URL || "http://localhost:8000",
+    mode: "cookie",
+    userStateKey: "sanctum.user.identity",
+    redirectIfAuthenticated: false,
+    redirectIfUnauthenticated: false,
 
     endpoints: {
-      csrf: '/sanctum/csrf-cookie',
-      login: '/auth/customer/login',
-      logout: '/customer/logout',
-      user: '/customer/me',
+      csrf: "/sanctum/csrf-cookie",
+      login: "/api/v1/auth/customer/login",
+      logout: "/api/v1/customer/logout",
+      user: "/api/v1/customer/me",
     },
-    // Note: Si le mapping de la propriété 'data' est nécessaire, nous devrons peut-être ajuster le plugin auth ou l'intercepteur,
-    // car la configuration standard de ce module pourrait ne pas supporter 'property' ici.
+
+    csrf: {
+      cookie: "XSRF-TOKEN",
+      header: "X-XSRF-TOKEN",
+    },
+
+    client: {
+      retry: false,
+      initialRequest: true,
+    },
 
     redirect: {
       keepRequestedRoute: true,
-      onLogin: '/dashboard',
-      onLogout: '/',
-      onAuthOnly: '/auth/login',
-      onGuestOnly: '/dashboard'
+      onLogin: "/account",
+      onLogout: "/",
+      onAuthOnly: "/auth/login",
+      onGuestOnly: "/",
     },
 
     globalMiddleware: {
       enabled: false,
+      allow404WithoutAuth: true,
     },
+
+    origin: process.env.NUXT_PUBLIC_SITE_URL || "http://localhost:3001",
   },
 
-  css: ['~/assets/css/main.css'],
+  css: ["~/assets/css/main.css"],
 
   fonts: {
     families: [
-      { name: 'Plus Jakarta Sans', provider: 'google' },
-      { name: 'Inter', provider: 'google' }
+      { name: "Plus Jakarta Sans", provider: "google" },
+      { name: "Inter", provider: "google" },
     ],
     defaults: {
       fallbacks: {
-        'serif': ['Georgia'],
-        'sans-serif': ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Arial']
-      }
+        serif: ["Georgia"],
+        "sans-serif": [
+          "system-ui",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "Roboto",
+          "Arial",
+        ],
+      },
     },
     experimental: {
-      processCSSVariables: true
-    }
+      processCSSVariables: true,
+    },
   },
 
   runtimeConfig: {
-    apiSecretUrl: '', // Sera surchargé par NUXT_API_SECRET_URL
+    // Privée : URL interne directe vers Laravel (SSR uniquement)
+    apiSecretUrl: process.env.NUXT_API_SECRET_URL || "http://localhost:8000",
+
     public: {
-      apiBase: '', // Sera surchargé par NUXT_PUBLIC_API_BASE
-      siteUrl: ''
-    }
+      appName: process.env.NUXT_PUBLIC_APP_NAME || "Bylin",
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || "http://localhost:8000",
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || "http://localhost:3001",
+      googleClientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID || "",
+    },
   },
 
   routeRules: {
+    // Home : SSR classique sans cache statique
+    "/": { ssr: true },
+    "/about": { prerender: true },
+    "/legal/**": { prerender: true },
 
-    // 1. Règle critique pour Sanctum :
-    // Le front appelle /api/v1/sanctum/csrf-cookie -> Le proxy renvoie vers Laravel /sanctum/csrf-cookie
-    '/api/v1/sanctum/**': {
-      proxy: 'http://localhost:8000/sanctum/**'
-    },
+    // Pages dynamiques avec cache court
+    "/products/**": { swr: 600 },
+    "/categories/**": { swr: 600 },
 
-    // 2. Règle pour le reste de l'API :
-    // Le front appelle /api/v1/auth/... -> Le proxy renvoie vers Laravel /api/v1/auth/...
-    '/api/v1/**': {
-      proxy: 'http://localhost:8000/api/v1/**'
-    },
-
-    '/': { swr: 3600 },
-
-    '/products/**': { swr: 600 },
-
-    '/about': { prerender: true },
-    '/legal/**': { prerender: true },
-
-    '/cart': { ssr: false },
-    '/checkout/**': { ssr: false },
-    '/account/**': { ssr: false }
+    // Pages client uniquement
+    "/cart": { ssr: false },
+    "/checkout/**": { ssr: false },
+    "/account/**": { ssr: false },
   },
 
   app: {
     head: {
-      charset: 'utf-8',
-      viewport: 'width=device-width, initial-scale=1',
-      title: 'bylin Style',
+      charset: "utf-8",
+      viewport: "width=device-width, initial-scale=1",
+      title: "Bylin Style",
       meta: [
-        { name: 'description', content: 'Votre site E-commerce nouvelle génération' }
+        {
+          name: "description",
+          content: "Votre site E-commerce nouvelle génération",
+        },
       ],
       htmlAttrs: {
-        lang: 'fr'
-      }
+        lang: "fr",
+      },
     },
-    pageTransition: { name: 'page', mode: 'out-in' }
+    pageTransition: { name: "page", mode: "out-in" },
   },
 
   vite: {
     build: {
-      cssMinify: 'lightningcss'
-    }
-  }
-})
+      cssMinify: "lightningcss",
+    },
+  },
+
+  devServer: {
+    port: 3001,
+    host: "localhost",
+  },
+
+  nitro: {
+    devProxy: {
+      "/api": {
+        target: process.env.NUXT_API_SECRET_URL || "http://localhost:8000",
+        changeOrigin: true,
+        prependPath: true,
+      },
+      "/sanctum": {
+        target: process.env.NUXT_API_SECRET_URL || "http://localhost:8000",
+        changeOrigin: true,
+        prependPath: true,
+      },
+    },
+
+    routeRules: {
+      "/api/**": {
+        proxy:
+          process.env.NODE_ENV === "production"
+            ? `${process.env.NUXT_API_SECRET_URL}/**`
+            : undefined,
+        headers: {
+          Accept: "application/json",
+        },
+      },
+      "/sanctum/**": {
+        proxy:
+          process.env.NODE_ENV === "production"
+            ? `${process.env.NUXT_API_SECRET_URL}/sanctum/**`
+            : undefined,
+      },
+    },
+  },
+});

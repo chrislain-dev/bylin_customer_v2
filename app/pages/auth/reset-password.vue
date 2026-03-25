@@ -1,188 +1,287 @@
-<template>
-    <transition name="scale-fade" appear>
-        <div class="w-full h-[100vh] flex bg-white overflow-hidden">
-            <!-- Left Side - Fashion Image -->
-            <div class="hidden md:flex md:w-1/2 relative overflow-hidden">
-                <div class="absolute inset-0 z-10"></div>
-                <img src="@/assets/images/auth.webp" alt="Fashion"
-                    class="w-full h-full object-cover object-top transform hover:scale-105 transition-transform duration-500" />
-            </div>
-
-            <!-- Right Side - Auth Form -->
-            <div class="w-full md:w-1/2 flex flex-col relative bg-indigo-700">
-                <!-- Content Container -->
-                <div class="flex-1 flex items-center justify-center p-8 md:p-12">
-                    <div class="max-w-md w-full">
-                        <div class="text-center mb-8">
-                            <transition name="bounce" appear>
-                                <div class="inline-flex items-center justify-center mb-4">
-                                    <router-link to="/">
-                                        <img src="/images/logo-white.png" alt="bylin logo"
-                                            class="w-48 h-48 object-contain" />
-                                    </router-link>
-                                </div>
-                            </transition>
-                            <h1 class="text-2xl font-bold text-gray-300 mb-2">
-                                Nouveau mot de passe
-                            </h1>
-                            <p class="text-gray-900">Choisissez un mot de passe sécurisé.</p>
-                        </div>
-
-                        <form @submit.prevent="handleResetPassword" class="space-y-6">
-                            <UInput v-model="email" type="email" placeholder="Confirmez votre email"
-                                autocomplete="email" size="xl" :ui="{
-                                    base: 'w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-white focus:border-white outline-none transition-all duration-200 bg-white',
-                                    leading: { padding: { xl: 'pl-12' } }
-                                }" :color="errors.email ? 'red' : 'white'">
-                                <template #leading>
-                                    <div
-                                        class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                                        <UIcon name="i-heroicons-envelope" class="w-5 h-5" />
-                                    </div>
-                                </template>
-                            </UInput>
-
-                            <UInput v-model="password" type="password" placeholder="Nouveau mot de passe"
-                                autocomplete="new-password" size="xl" :ui="{
-                                    base: 'w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-white focus:border-white outline-none transition-all duration-200 bg-white',
-                                    leading: { padding: { xl: 'pl-12' } }
-                                }" :color="errors.password ? 'red' : 'white'">
-                                <template #leading>
-                                    <div
-                                        class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                                        <UIcon name="i-heroicons-lock-closed" class="w-5 h-5" />
-                                    </div>
-                                </template>
-                            </UInput>
-
-                            <UInput v-model="passwordConfirmation" type="password"
-                                placeholder="Confirmer le mot de passe" autocomplete="new-password" size="xl" :ui="{
-                                    base: 'w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-white focus:border-white outline-none transition-all duration-200 bg-white',
-                                    leading: { padding: { xl: 'pl-12' } }
-                                }" :color="errors.password ? 'red' : 'white'">
-                                <template #leading>
-                                    <div
-                                        class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                                        <UIcon name="i-heroicons-lock-closed" class="w-5 h-5" />
-                                    </div>
-                                </template>
-                            </UInput>
-
-                            <transition name="slide-down">
-                                <div v-if="Object.keys(errors).length > 0" class="text-red-500 text-sm space-y-1">
-                                    <p v-for="(err, field) in errors" :key="field" class="flex items-center gap-2">
-                                        <UIcon name="i-heroicons-exclamation-circle" class="w-4 h-4" />
-                                        {{ Array.isArray(err) ? err[0] : err }}
-                                    </p>
-                                </div>
-                            </transition>
-
-                            <transition name="slide-down">
-                                <p v-if="message"
-                                    class="text-green-400 text-sm flex items-center gap-2 bg-green-900/20 p-3 rounded border border-green-500/30">
-                                    <UIcon name="i-heroicons-check-circle" class="w-5 h-5 flex-shrink-0" />
-                                    {{ message }}
-                                </p>
-                            </transition>
-
-                            <UButton type="submit" :disabled="!email || !password || isLoading" :loading="isLoading"
-                                block size="xl" color="white" variant="solid"
-                                class="hover:bg-indigo-700 hover:text-white hover:border transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl text-black font-medium">
-                                Réinitialiser le mot de passe
-                            </UButton>
-                        </form>
-
-                        <div class="text-center mt-6">
-                            <p class="text-gray-200 text-sm">
-                                <router-link to="/auth/login"
-                                    class="text-white hover:text-black hover:underline font-medium transition-colors flex items-center justify-center gap-2">
-                                    <UIcon name="i-heroicons-arrow-left" class="w-4 h-4" />
-                                    Retour à la connexion
-                                </router-link>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </transition>
-</template>
-
+<!-- pages/auth/reset-password.vue -->
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-
 definePageMeta({
-    layout: false
+      layout: 'auth',
+      sanctum: {
+            excluded: true,
+      }
 })
 
 const route = useRoute()
 const router = useRouter()
-const authStore = useAuthStore()
+const toast = useToast()
+const client = useSanctumClient()
 
-const email = ref('')
-const password = ref('')
-const passwordConfirmation = ref('')
-const token = ref('')
+// Récupérer token et email depuis l'URL
+const token = computed(() => route.query.token as string)
+const email = computed(() => route.query.email as string)
 
-const errors = ref<Record<string, string[]>>({})
-const message = ref('')
-const isLoading = ref(false)
-
-onMounted(() => {
-    // Récupérer le token et l'email depuis l'URL si présents
-    token.value = route.query.token as string || ''
-    email.value = route.query.email as string || ''
-
-    if (!token.value) {
-        errors.value = { general: ['Lien de réinitialisation invalide ou expiré.'] }
-    }
+const form = reactive({
+      password: '',
+      password_confirmation: ''
 })
 
-const handleResetPassword = async () => {
-    errors.value = {}
-    message.value = ''
+const loading = ref(false)
+const showPassword = ref(false)
+const showPasswordConfirmation = ref(false)
 
-    if (!password.value || password.value.length < 8) {
-        errors.value.password = ['Le mot de passe doit contenir au moins 8 caractères.']
-        return
-    }
+// Validation en temps réel
+const passwordStrength = computed(() => {
+      const pwd = form.password
+      if (!pwd) return { level: 0, text: '', color: '' }
 
-    if (password.value !== passwordConfirmation.value) {
-        errors.value.password = ['Les mots de passe ne correspondent pas.']
-        return
-    }
+      let strength = 0
+      if (pwd.length >= 8) strength++
+      if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) strength++
+      if (/\d/.test(pwd)) strength++
+      if (/[^a-zA-Z0-9]/.test(pwd)) strength++
 
-    try {
-        isLoading.value = true
-        const { data, error: apiError } = await authStore.resetPassword({
-            token: token.value,
-            email: email.value,
-            password: password.value,
-            password_confirmation: passwordConfirmation.value
-        })
+      const levels = [
+            { level: 1, text: 'Faible', color: 'red' },
+            { level: 2, text: 'Moyen', color: 'orange' },
+            { level: 3, text: 'Bon', color: 'yellow' },
+            { level: 4, text: 'Fort', color: 'green' },
+      ]
 
-        if (apiError.value) {
-            throw apiError.value
-        }
+      return levels[strength - 1] || { level: 0, text: '', color: '' }
+})
 
-        message.value = 'Votre mot de passe a été réinitialisé avec succès.'
-        setTimeout(() => {
-            router.push('/auth/login')
-        }, 2000)
-    } catch (e: any) {
-        if (e.statusCode === 422) {
-            errors.value = e.data?.errors || { general: ['Données invalides'] }
-        } else {
-            errors.value = { general: ['Une erreur est survenue. Le lien a peut-être expiré.'] }
-        }
-    } finally {
-        isLoading.value = false
-    }
+const passwordsMatch = computed(() => {
+      if (!form.password_confirmation) return null
+      return form.password === form.password_confirmation
+})
+
+const isValidLink = computed(() => !!token.value && !!email.value)
+
+async function handleResetPassword() {
+      // Validations côté client
+      if (!form.password || !form.password_confirmation) {
+            toast.add({
+                  title: 'Champs requis',
+                  description: 'Veuillez remplir tous les champs.',
+                  color: 'warning',
+                  icon: 'i-heroicons-exclamation-triangle'
+            })
+            return
+      }
+
+      if (form.password.length < 8) {
+            toast.add({
+                  title: 'Mot de passe trop court',
+                  description: 'Le mot de passe doit contenir au moins 8 caractères.',
+                  color: 'warning',
+                  icon: 'i-heroicons-exclamation-triangle'
+            })
+            return
+      }
+
+      if (form.password !== form.password_confirmation) {
+            toast.add({
+                  title: 'Erreur',
+                  description: 'Les mots de passe ne correspondent pas.',
+                  color: 'error',
+                  icon: 'i-heroicons-x-circle'
+            })
+            return
+      }
+
+      loading.value = true
+
+      try {
+            await client('/api/v1/auth/customer/reset-password', {
+                  method: 'POST',
+                  body: {
+                        token: token.value,
+                        email: email.value,
+                        password: form.password,
+                        password_confirmation: form.password_confirmation
+                  }
+            })
+
+            toast.add({
+                  title: 'Succès !',
+                  description: 'Votre mot de passe a été réinitialisé avec succès.',
+                  color: 'success',
+                  icon: 'i-heroicons-check-circle',
+                  duration: 5000
+            })
+
+            // Redirection vers login après 1.5s
+            setTimeout(() => {
+                  router.push('/auth/login')
+            }, 1500)
+
+      } catch (error: any) {
+            const message = error?.data?.message || 'Une erreur est survenue'
+
+            toast.add({
+                  title: 'Erreur',
+                  description: message,
+                  color: 'error',
+                  icon: 'i-heroicons-x-circle',
+                  duration: 7000
+            })
+      } finally {
+            loading.value = false
+      }
 }
 </script>
 
-<style scoped>
-/* Animations globales dans main.css */
-</style>
+<template>
+      <div class="space-y-6">
+            <!-- Header -->
+            <div class="text-center">
+                  <div
+                        class="mx-auto w-16 h-16 bg-primary-100 dark:bg-primary-900/20 rounded-full flex items-center justify-center mb-4">
+                        <UIcon name="i-heroicons-lock-closed" class="w-8 h-8 text-primary-600 dark:text-primary-400" />
+                  </div>
+                  <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                        Nouveau mot de passe
+                  </h1>
+                  <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                        Créez un mot de passe sécurisé pour votre compte.
+                  </p>
+            </div>
+
+            <!-- Invalid Link -->
+            <div v-if="!isValidLink"
+                  class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center space-y-4">
+                  <div class="flex justify-center">
+                        <UIcon name="i-heroicons-exclamation-triangle"
+                              class="w-16 h-16 text-red-600 dark:text-red-400" />
+                  </div>
+                  <div>
+                        <h3 class="font-semibold text-red-900 dark:text-red-300 text-lg">
+                              Lien invalide
+                        </h3>
+                        <p class="text-sm text-red-700 dark:text-red-400 mt-2">
+                              Le lien de réinitialisation est invalide ou incomplet.
+                        </p>
+                  </div>
+                  <UButton to="/auth/forgot-password" color="error" variant="outline" block size="lg">
+                        Demander un nouveau lien
+                  </UButton>
+            </div>
+
+            <!-- Form -->
+            <form v-else class="space-y-6" @submit.prevent="handleResetPassword">
+                  <!-- Email (lecture seule) -->
+                  <UFormField label="Adresse email" name="email">
+                        <UInput :model-value="email" type="email" icon="i-heroicons-envelope" size="lg" disabled
+                              class="opacity-75" />
+                  </UFormField>
+
+                  <!-- Nouveau mot de passe -->
+                  <UFormField label="Nouveau mot de passe" name="password">
+                        <div class="space-y-3">
+                              <div class="relative">
+                                    <UInput v-model="form.password" :type="showPassword ? 'text' : 'password'"
+                                          icon="i-heroicons-lock-closed" placeholder="••••••••" size="lg" autofocus
+                                          class="pr-12" />
+                                    <button type="button" @click="showPassword = !showPassword"
+                                          class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                                          <UIcon :name="showPassword ? 'i-heroicons-eye-slash' : 'i-heroicons-eye'"
+                                                class="w-5 h-5" />
+                                    </button>
+                              </div>
+
+                              <!-- Indicateur de force -->
+                              <div v-if="form.password" class="space-y-2">
+                                    <div class="flex items-center justify-between text-xs">
+                                          <span class="text-gray-500 dark:text-gray-400">Force du mot de passe</span>
+                                          <span :class="{
+                                                'text-red-600 dark:text-red-400': passwordStrength.color === 'red',
+                                                'text-orange-600 dark:text-orange-400': passwordStrength.color === 'orange',
+                                                'text-yellow-600 dark:text-yellow-400': passwordStrength.color === 'yellow',
+                                                'text-green-600 dark:text-green-400': passwordStrength.color === 'green',
+                                          }" class="font-medium">
+                                                {{ passwordStrength.text }}
+                                          </span>
+                                    </div>
+                                    <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                          <div :class="{
+                                                'bg-red-500': passwordStrength.color === 'red',
+                                                'bg-orange-500': passwordStrength.color === 'orange',
+                                                'bg-yellow-500': passwordStrength.color === 'yellow',
+                                                'bg-green-500': passwordStrength.color === 'green',
+                                          }" class="h-full transition-all duration-300"
+                                                :style="{ width: `${(passwordStrength.level / 4) * 100}%` }" />
+                                    </div>
+                              </div>
+
+                              <!-- Critères de sécurité -->
+                              <ul class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                                    <li :class="form.password.length >= 8 ? 'text-green-600 dark:text-green-400' : ''">
+                                          <UIcon :name="form.password.length >= 8 ? 'i-heroicons-check-circle' : 'i-heroicons-minus-circle'"
+                                                class="w-3.5 h-3.5 inline mr-1" />
+                                          Au moins 8 caractères
+                                    </li>
+                                    <li
+                                          :class="(/[a-z]/.test(form.password) && /[A-Z]/.test(form.password)) ? 'text-green-600 dark:text-green-400' : ''">
+                                          <UIcon :name="(/[a-z]/.test(form.password) && /[A-Z]/.test(form.password)) ? 'i-heroicons-check-circle' : 'i-heroicons-minus-circle'"
+                                                class="w-3.5 h-3.5 inline mr-1" />
+                                          Majuscules et minuscules
+                                    </li>
+                                    <li :class="/\d/.test(form.password) ? 'text-green-600 dark:text-green-400' : ''">
+                                          <UIcon :name="/\d/.test(form.password) ? 'i-heroicons-check-circle' : 'i-heroicons-minus-circle'"
+                                                class="w-3.5 h-3.5 inline mr-1" />
+                                          Au moins un chiffre
+                                    </li>
+                                    <li
+                                          :class="/[^a-zA-Z0-9]/.test(form.password) ? 'text-green-600 dark:text-green-400' : ''">
+                                          <UIcon :name="/[^a-zA-Z0-9]/.test(form.password) ? 'i-heroicons-check-circle' : 'i-heroicons-minus-circle'"
+                                                class="w-3.5 h-3.5 inline mr-1" />
+                                          Au moins un caractère spécial
+                                    </li>
+                              </ul>
+                        </div>
+                  </UFormField>
+
+                  <!-- Confirmation du mot de passe -->
+                  <UFormField label="Confirmer le mot de passe" name="password_confirmation">
+                        <div class="space-y-3">
+                              <div class="relative">
+                                    <UInput v-model="form.password_confirmation"
+                                          :type="showPasswordConfirmation ? 'text' : 'password'"
+                                          icon="i-heroicons-lock-closed" placeholder="••••••••" size="lg"
+                                          class="pr-12" />
+                                    <button type="button" @click="showPasswordConfirmation = !showPasswordConfirmation"
+                                          class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                                          <UIcon :name="showPasswordConfirmation ? 'i-heroicons-eye-slash' : 'i-heroicons-eye'"
+                                                class="w-5 h-5" />
+                                    </button>
+                              </div>
+
+                              <!-- Indicateur de correspondance -->
+                              <div v-if="form.password_confirmation" class="flex items-center gap-2 text-xs">
+                                    <UIcon :name="passwordsMatch ? 'i-heroicons-check-circle' : 'i-heroicons-x-circle'"
+                                          :class="passwordsMatch ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'"
+                                          class="w-4 h-4" />
+                                    <span
+                                          :class="passwordsMatch ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                                          {{ passwordsMatch ? 'Les mots de passe correspondent' : 'Les mots de passe ne correspondent pas' }}
+                                    </span>
+                              </div>
+                        </div>
+                  </UFormField>
+
+                  <!-- Submit Button -->
+                  <UButton type="submit" color="primary" block size="lg" :loading="loading"
+                        :disabled="!form.password || !form.password_confirmation || !passwordsMatch">
+                        <template #leading>
+                              <UIcon name="i-heroicons-check" class="w-5 h-5" />
+                        </template>
+                        Réinitialiser le mot de passe
+                  </UButton>
+
+                  <!-- Back to login -->
+                  <div class="text-center">
+                        <NuxtLink to="/auth/login"
+                              class="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white inline-flex items-center gap-2">
+                              <UIcon name="i-heroicons-arrow-left" class="w-4 h-4" />
+                              Retour à la connexion
+                        </NuxtLink>
+                  </div>
+            </form>
+      </div>
+</template>

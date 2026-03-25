@@ -1,450 +1,411 @@
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { useStorage } from '@vueuse/core'
-import { useAuthStore } from '@/stores/auth'
-import { API_ROUTES } from '@/utils/api-route'
-import type { CartItem, CouponData, DeliveryInfo } from '@/types/cart'
+// stores/cart.ts
+import { defineStore } from "pinia";
+import type { CartItem, AddToCartPayload } from "~/types/cart";
+import type { Product } from "~/types/product";
 
-export const useCartStore = defineStore('cart', () => {
-    // --- STATE ---
+export const useCartStore = defineStore(
+  "cart",
+  () => {
+    const toast = useToast();
+    const authStore = useAuthStore();
+    const client = useSanctumClient(); // Utilise le client Sanctum qui gère auth automatiquement
 
-    // Persistance locale (Guest cart)
-    const items = useStorage<CartItem[]>('cart-items', [])
+    // State
+    const items = ref<CartItem[]>([]);
+    const drawerOpen = ref(false);
+    const syncing = ref(false);
+    const lastSyncedAt = ref<string | null>(null);
 
-    // Infos panier
-    const coupon = useStorage<CouponData | null>('cart-coupon', null)
-    const deliveryInfo = useStorage<DeliveryInfo | null>('cart-delivery', null)
+    // Computed - Totaux
+    const itemCount = computed(() =>
+      items.value.reduce((sum, item) => sum + item.quantity, 0),
+    );
 
-    // État Shared Cart (Spécifique à ton projet)
-    const currentCartId = ref<number | null>(null)
-    const sharedCartToken = ref<string | null>(null)
-    const manualFinalPrice = ref<number | null>(null) // Override pour shared cart
+    const subtotal = computed(() =>
+      items.value.reduce((sum, item) => sum + item.subtotal, 0),
+    );
 
-    // UI States
-    const isSyncing = ref(false)
-    const error = ref<string | null>(null)
-    const successMessage = ref<string | null>(null)
-    const isCartOpen = ref(false)
+    const shipping = computed(() => {
+      if (subtotal.value >= 100000) return 0;
+      return items.value.length > 0 ? 2000 : 0;
+    });
 
-    // --- GETTERS ---
+    const tax = computed(() => {
+      return Math.round(subtotal.value * 0.18);
+    });
 
-    const totalQuantity = computed(() => items.value.reduce((sum, i) => sum + i.quantity, 0))
+    const discount = computed(() => {
+      return 0;
+    });
 
-    // Sous-total théorique (Front-end calculation - Optimistic)
-    const subTotal = computed(() => items.value.reduce((sum, i) => sum + (i.price * i.quantity), 0))
+    const total = computed(
+      () => subtotal.value + shipping.value + tax.value - discount.value,
+    );
 
-    // Total avec réduction coupon (Note: Le vrai total doit être confirmé par le back lors du checkout)
-    const totalPrice = computed(() => {
-        let total = subTotal.value
-        if (coupon.value) {
-            total -= coupon.value.discount_value
-        }
-        return Math.max(0, total) // Pas de négatif
-    })
+    // Backend sync functions
+    async function syncWithBackend() {
+      if (!authStore.isAuthenticated || syncing.value) return;
 
-    // Prix final (supporte l'override manuel pour les paniers partagés/tontines)
-    const finalPrice = computed(() => manualFinalPrice.value ?? totalPrice.value)
+      syncing.value = true;
+      try {
+        // Le client Sanctum gère automatiquement l'auth et les cookies
+        const response = await client<{ success: boolean; data: { items: CartItem[] } }>("/api/v1/customer/cart");
 
-    // Frais de livraison (gratuit au-dessus de 60000 XOF)
-    const shippingCost = computed(() => {
-        if (subTotal.value >= 60000) return 0
-        return deliveryInfo.value?.delivery_cost || 5000 // Frais par défaut
-    })
-
-    // Total final avec frais de livraison
-    const total = computed(() => totalPrice.value + shippingCost.value)
-
-    // Aliases pour compatibilité avec les composants
-    const subtotal = subTotal
-
-    // Formatage (Intl)
-    const formatMoney = (amount: number) =>
-        new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(amount)
-
-    const formattedTotal = computed(() => formatMoney(finalPrice.value))
-    const formattedDelivery = computed(() => formatMoney(deliveryInfo.value?.delivery_cost || 0))
-
-    // --- ACTIONS PRINCIPALES ---
-
-    /**
-     * Ajoute un produit au panier
-     * Gère intelligemment les variantes (Même produit mais taille différente = nouvelle ligne)
-     */
-    function addItem(product: any) {
-        // Validation minimale
-        if (!product.product_id && !product.id) {
-            console.error('❌ ID produit manquant', product)
-            return
-        }
-
-        const productId = product.product_id || product.id
-
-        // Clé unique pour identifier l'item (ID + Options)
-        const findExisting = (i: CartItem) =>
-            i.product_id === productId &&
-            i.variant_id === (product.variant_id || null) &&
-            i.selectedColor?.id === product.selectedColor?.id &&
-            i.selectedSize?.id === product.selectedSize?.id
-
-        const existingItem = items.value.find(findExisting)
-
-        if (existingItem) {
-            existingItem.quantity += (product.quantity || 1)
-        } else {
-            const newItem: CartItem = {
-                id: Date.now() + Math.random(), // Generate unique ID for UI tracking
-                product_id: productId,
-                slug: product.slug || '',
-                name: product.name,
-                price: Number(product.price), // Sécurité typage
-                image: product.image || product.thumbnail,
-                quantity: product.quantity || 1,
-                selectedColor: product.selectedColor || null,
-                selectedSize: product.selectedSize || null,
-                variant_id: product.variant_id || null,
-                variant: {
-                    size: product.selectedSize?.name || product.variant?.size,
-                    color: product.selectedColor?.name || product.variant?.color
-                }
-            }
-            items.value.push(newItem)
-        }
-
-        // Reset des états liés au calcul
-        manualFinalPrice.value = null
-        syncCartWithServer() // "Fire and forget" (ne bloque pas l'UI)
+        // The API returns a Cart object with items array
+        items.value = response.data?.items || [];
+        lastSyncedAt.value = new Date().toISOString();
+      } catch (error: any) {
+        console.error("Failed to sync cart:", error);
+      } finally {
+        syncing.value = false;
+      }
     }
 
-    function updateQuantity(productIdOrItemId: number, quantity: number, variantId: number | null = null) {
-        const item = items.value.find(i =>
-            (i.product_id === productIdOrItemId && i.variant_id === variantId) ||
-            i.id === productIdOrItemId
-        )
-        if (item) {
-            if (quantity <= 0) {
-                removeItem(productIdOrItemId, variantId)
-            } else {
-                item.quantity = quantity
-                syncCartWithServer()
-            }
+    async function addToBackend(payload: AddToCartPayload): Promise<boolean> {
+      if (!authStore.isAuthenticated) return false;
+
+      try {
+        // Le client Sanctum inclut automatiquement CSRF token et cookies
+        await client<{ data: CartItem }>("/api/v1/customer/cart/items", {
+          method: "POST",
+          body: payload,
+        });
+
+        return true;
+      } catch (error: any) {
+        console.error("Failed to add to cart:", error);
+        throw error;
+      }
+    }
+
+    async function updateInBackend(
+      itemId: string,
+      quantity: number,
+    ): Promise<boolean> {
+      if (!authStore.isAuthenticated) return false;
+
+      try {
+        await client(`/api/v1/customer/cart/items/${itemId}`, {
+          method: "PUT",
+          body: { quantity },
+        });
+
+        return true;
+      } catch (error: any) {
+        console.error("Failed to update cart item:", error);
+        throw error;
+      }
+    }
+
+    async function removeFromBackend(itemId: string): Promise<boolean> {
+      if (!authStore.isAuthenticated) return false;
+
+      try {
+        await client(`/api/v1/customer/cart/items/${itemId}`, {
+          method: "DELETE",
+        });
+
+        return true;
+      } catch (error: any) {
+        console.error("Failed to remove cart item:", error);
+        throw error;
+      }
+    }
+
+    // Actions
+    async function addItem(
+      product: Product,
+      quantity = 1,
+      variationId?: string,
+    ) {
+      // Validation du stock
+      const variation = variationId
+        ? product.variations?.find((v) => v.id === variationId)
+        : null;
+
+      const availableStock = variation
+        ? variation.stock_quantity
+        : product.stock_quantity;
+
+      if (availableStock < quantity) {
+        toast.add({
+          title: "Stock insuffisant",
+          description: `Seulement ${availableStock} article(s) disponible(s)`,
+          color: "error",
+          icon: "i-heroicons-exclamation-triangle",
+        });
+        return;
+      }
+
+      // Chercher si l'article existe déjà
+      const existingItem = items.value.find(
+        (i) =>
+          i.product_id === product.id &&
+          (variationId ? i.variation_id === variationId : !i.variation_id),
+      );
+
+      if (existingItem) {
+        const newQuantity = existingItem.quantity + quantity;
+        if (newQuantity > availableStock) {
+          toast.add({
+            title: "Stock insuffisant",
+            description: `Maximum ${availableStock} article(s) disponible(s)`,
+            color: "error",
+            icon: "i-heroicons-exclamation-triangle",
+          });
+          return;
         }
+
+        // Update local
+        existingItem.quantity = newQuantity;
+        existingItem.subtotal = existingItem.quantity * existingItem.unit_price;
+
+        // Update backend
+        if (authStore.isAuthenticated) {
+          try {
+            await updateInBackend(existingItem.id, newQuantity);
+          } catch (error) {
+            // Rollback on error
+            existingItem.quantity -= quantity;
+            existingItem.subtotal =
+              existingItem.quantity * existingItem.unit_price;
+
+            toast.add({
+              title: "Erreur",
+              description: "Impossible de mettre à jour le panier",
+              color: "error",
+              icon: "i-heroicons-exclamation-circle",
+            });
+            return;
+          }
+        }
+      } else {
+        const unitPrice = variation?.price || product.price;
+
+        const newItem: CartItem = {
+          id: crypto.randomUUID(),
+          product_id: product.id,
+          variation_id: variationId || null,
+          product,
+          variation: variation || null,
+          quantity,
+          unit_price: unitPrice,
+          subtotal: unitPrice * quantity,
+          added_at: new Date().toISOString(),
+        };
+
+        // Add to backend first if authenticated
+        if (authStore.isAuthenticated) {
+          try {
+            await addToBackend({
+              product_id: product.id,
+              variation_id: variationId,
+              quantity,
+            });
+          } catch (error) {
+            toast.add({
+              title: "Erreur",
+              description: "Impossible d'ajouter l'article au panier",
+              color: "error",
+              icon: "i-heroicons-exclamation-circle",
+            });
+            return;
+          }
+        }
+
+        // Add local
+        items.value.push(newItem);
+      }
+
+      // Ouvrir le drawer et notifier
+      drawerOpen.value = true;
+
+      toast.add({
+        title: "✓ Ajouté au panier",
+        description: `${product.name} ${variation ? `(${getVariationLabel(variation)})` : ""}`,
+        color: "success",
+        icon: "i-heroicons-shopping-bag",
+      });
     }
 
-    function removeItem(productIdOrItemId: number, variantId: number | null = null) {
-        // Support for removing by item.id (UI tracking ID) or product_id
-        items.value = items.value.filter(i => {
-            if (variantId !== null) {
-                return !(i.product_id === productIdOrItemId && i.variant_id === variantId)
-            }
-            return !(i.product_id === productIdOrItemId || i.id === productIdOrItemId)
-        })
-        syncCartWithServer()
-    }
+    async function updateQuantity(itemId: string, newQuantity: number) {
+      const item = items.value.find((i) => i.id === itemId);
+      if (!item) return;
 
-    function clearCart() {
-        items.value = []
-        coupon.value = null
-        currentCartId.value = null
-        sharedCartToken.value = null
-        manualFinalPrice.value = null
-        error.value = null
-    }
+      if (newQuantity < 1) {
+        await removeItem(itemId);
+        return;
+      }
 
-    // --- ACTIONS SERVEUR (SYNC) ---
+      const maxQuantity = item.variation
+        ? item.variation.stock_quantity
+        : item.product.stock_quantity;
 
-    /**
-     * Synchronise le panier local avec le serveur
-     * Gère le nettoyage des items invalides
-     */
-    async function syncCartWithServer(isShared = false) {
-        const authStore = useAuthStore()
+      if (newQuantity > maxQuantity) {
+        toast.add({
+          title: "Stock insuffisant",
+          description: `Maximum ${maxQuantity} article(s) disponible(s)`,
+          color: "error",
+          icon: "i-heroicons-exclamation-triangle",
+        });
+        return;
+      }
 
-        // Si pas connecté ou panier vide, pas de sync serveur (sauf si on veut vider le serveur ?)
-        if (!authStore.isAuthenticated || items.value.length === 0) return
+      const oldQuantity = item.quantity;
 
-        isSyncing.value = true
-        error.value = null
+      // Update local optimistically
+      item.quantity = newQuantity;
+      item.subtotal = item.quantity * item.unit_price;
 
+      // Update backend
+      if (authStore.isAuthenticated) {
         try {
-            // Nettoyage pré-envoi
-            const validItems = items.value.filter(i => i.product_id && i.quantity > 0)
+          await updateInBackend(itemId, newQuantity);
+        } catch (error) {
+          // Rollback on error
+          item.quantity = oldQuantity;
+          item.subtotal = item.quantity * item.unit_price;
 
-            const payload = {
-                items: validItems.map(item => ({
-                    product_id: item.product_id,
-                    quantity: item.quantity,
-                    variant_id: item.variant_id, // Important si ton back gère les variantes
-                    options: { // Envoi générique des options
-                        color: item.selectedColor?.id,
-                        size: item.selectedSize?.id
-                    }
-                })),
-                is_shared: isShared,
-                coupon_code: coupon.value?.code || null
-            }
-
-            const { data, error: fetchError } = await useApi<any>(API_ROUTES.cart.base, {
-                method: 'POST',
-                body: payload
-            })
-
-            if (fetchError.value) {
-                throw new Error(fetchError.value.message || "Erreur API")
-            }
-
-            const rawData = data.value
-
-            if (!rawData) {
-                throw new Error("Données non reçues")
-            }
-
-            if (rawData.success) {
-                currentCartId.value = rawData.cart?.id
-                updatePricesFromServer(rawData.cart.items)
-            }
-        } catch (err: any) {
-            console.error('Erreur sync panier', err)
-            // On n'affiche pas l'erreur à l'utilisateur pour une sync background, sauf si critique
-        } finally {
-            isSyncing.value = false
+          toast.add({
+            title: "Erreur",
+            description: "Impossible de mettre à jour la quantité",
+            color: "error",
+            icon: "i-heroicons-exclamation-circle",
+          });
         }
+      }
     }
 
-    /**
-     * Charge le panier depuis le serveur (au Login)
-     */
-    async function loadCartFromServer() {
-        const authStore = useAuthStore()
-        if (!authStore.isAuthenticated) return
+    async function removeItem(itemId: string) {
+      const index = items.value.findIndex((i) => i.id === itemId);
+      if (index === -1) return;
 
-        isSyncing.value = true
+      const item = items.value[index];
+      const removedItem = { ...item };
+
+      // Remove local optimistically
+      items.value.splice(index, 1);
+
+      // Remove from backend
+      if (authStore.isAuthenticated) {
         try {
-            const { data, error: fetchError } = await useApi<any>(API_ROUTES.cart.load || '/cart')
+          await removeFromBackend(itemId);
+        } catch (error) {
+          // Rollback on error
+          items.value.splice(index, 0, removedItem);
 
-            if (fetchError.value) {
-                throw new Error(fetchError.value.message || "Erreur API")
-            }
-
-            const rawData = data.value
-
-            if (!rawData) {
-                throw new Error("Données non reçues")
-            }
-
-            if (rawData.data?.items) {
-                // Stratégie : Le serveur écrase le local au chargement initial
-                // (Tu pourrais aussi faire un merge complexe comme pour la wishlist)
-                items.value = rawData.data.items.map((i: any) => ({
-                    id: Date.now() + Math.random(),
-                    product_id: i.product_id,
-                    slug: i.product?.slug || '',
-                    name: i.product.name,
-                    price: Number(i.price),
-                    image: i.product.image,
-                    quantity: i.quantity,
-                    variant_id: i.variant_id,
-                    selectedColor: i.options?.color ? { id: i.options.color, name: '...' } : null,
-                    selectedSize: i.options?.size ? { id: i.options.size, name: '...' } : null,
-                    variant: {
-                        size: i.variant?.size,
-                        color: i.variant?.color
-                    }
-                }))
-
-                currentCartId.value = rawData.data.id
-            }
-        } catch (err) {
-            console.warn('Impossible de charger le panier serveur', err)
-        } finally {
-            isSyncing.value = false
+          toast.add({
+            title: "Erreur",
+            description: "Impossible de retirer l'article",
+            color: "error",
+            icon: "i-heroicons-exclamation-circle",
+          });
+          return;
         }
+      }
+
+      toast.add({
+        title: "Article retiré",
+        description: `${removedItem.product.name} a été retiré du panier`,
+        color: "neutral",
+        icon: "i-heroicons-trash",
+      });
     }
 
-    // --- ACTIONS COUPON ---
+    function clear() {
+      items.value = [];
+      drawerOpen.value = false;
+    }
 
-    async function applyCoupon(code: string) {
-        if (!code) return
+    function toggleDrawer() {
+      drawerOpen.value = !drawerOpen.value;
+    }
 
-        error.value = null
-        try {
-            const { data, error: fetchError } = await useApi<any>(API_ROUTES.cart.coupon, {
-                method: 'POST',
-                body: {
-                    code,
-                    cart_total: subTotal.value // Le serveur revérifiera de toute façon
-                }
-            })
+    function validateStock(): boolean {
+      for (const item of items.value) {
+        const availableStock = item.variation
+          ? item.variation.stock_quantity
+          : item.product.stock_quantity;
 
-            if (data.value.success) {
-                coupon.value = {
-                    code,
-                    discount_value: data.value.discount_value || data.value.discount,
-                    type: data.value.type || 'fixed'
-                }
-                successMessage.value = "Code promo appliqué !"
-                return true
-            }
-        } catch (err: any) {
-            error.value = err.data?.message || "Code promo invalide"
-            coupon.value = null
-            return false
+        if (item.quantity > availableStock) {
+          toast.add({
+            title: "Stock insuffisant",
+            description: `${item.product.name} n'est plus disponible en quantité demandée`,
+            color: "error",
+            icon: "i-heroicons-exclamation-circle",
+          });
+          return false;
         }
+      }
+      return true;
     }
 
-    function removeCoupon() {
-        coupon.value = null
-        successMessage.value = null
+    function getCheckoutData() {
+      return {
+        items: items.value.map((item) => ({
+          product_id: item.product_id,
+          variation_id: item.variation_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+        })),
+        subtotal: subtotal.value,
+        shipping: shipping.value,
+        tax: tax.value,
+        discount: discount.value,
+        total: total.value,
+      };
     }
 
-    // --- ACTIONS SHARED CART (Spécifique) ---
+    function getVariationLabel(variation: any): string {
+      const parts = [];
+      if (variation.attributes?.color) parts.push(variation.attributes.color);
+      if (variation.attributes?.size) parts.push(variation.attributes.size);
+      if (variation.attributes?.shoe_size)
+        parts.push(`Pointure ${variation.attributes.shoe_size}`);
+      return parts.join(", ");
+    }
 
-    async function storeSharedCart(formData: any) {
-        try {
-            // 1. On force une sync pour être sûr que le back a les items
-            await syncCartWithServer(false)
-
-            const payload = {
-                cart_id: currentCartId.value, // ID du panier technique synchronisé
-                title: formData.title,
-                description: formData.description,
-                expires_in: formData.closing_date,
-                final_price: manualFinalPrice.value ?? finalPrice.value, // Le prix cible défini par le créateur
-                // Ajoute ici les infos de livraison si nécessaires
-                delivery_info: deliveryInfo.value
-            }
-
-            const { data, error: fetchError } = await useApi<any>(API_ROUTES.cart.shared.base, {
-                method: 'POST',
-                body: payload
-            })
-
-            if (fetchError.value) {
-                throw new Error(fetchError.value.message || "Erreur API")
-            }
-
-            const rawData = data.value
-
-            if (!rawData) {
-                throw new Error("Données non reçues")
-            }
-
-            sharedCartToken.value = rawData.token
-            return rawData
-
-        } catch (err: any) {
-            error.value = err.data?.message || "Erreur création panier partagé"
-            throw err
+    // Auto-sync on auth changes
+    watch(
+      () => authStore.isAuthenticated,
+      (isAuth) => {
+        if (isAuth) {
+          syncWithBackend();
         }
-    }
-
-    async function fetchSharedCartByToken(token: string) {
-        try {
-            // Appel public (pas besoin d'auth)
-            const { data, error: fetchError } = await useApi<any>(API_ROUTES.cart.shared.publicSingle(token))
-
-            if (fetchError.value) {
-                throw new Error(fetchError.value.message || "Erreur API")
-            }
-
-            const rawData = data.value
-
-            if (!rawData) {
-                throw new Error("Données non reçues")
-            }
-
-            return rawData
-        } catch (err) {
-            throw err
-        }
-    }
-
-    async function processSharedPayment(token: string, paymentData: any) {
-        try {
-            return await useApi(API_ROUTES.cart.shared.processPayment(token), {
-                method: 'POST',
-                body: {
-                    ...paymentData,
-                    mobile_money_provider: paymentData.mobile_money_provider || 'mtn'
-                }
-            })
-        } catch (err: any) {
-            throw err // On laisse le composant gérer l'affichage de l'erreur
-        }
-    }
-
-    // --- HELPERS ---
-
-    function setDeliveryInfo(info: Omit<DeliveryInfo, 'set_at'>) {
-        deliveryInfo.value = {
-            ...info,
-            set_at: new Date().toISOString()
-        }
-    }
-
-    function updatePricesFromServer(items: any) {
-        items.value = items.value.map((item: any) => {
-            return {
-                ...item,
-                price: Number(item.price),
-                final_price: Number(item.final_price)
-            }
-        })
-    }
-
-    // Toggle cart slideover
-    function toggleCart() {
-        isCartOpen.value = !isCartOpen.value
-    }
+      },
+      { immediate: true },
+    );
 
     return {
-        // State
-        items,
-        coupon,
-        deliveryInfo,
-        isSyncing,
-        error,
-        successMessage,
-        currentCartId,
-        sharedCartToken,
-        manualFinalPrice,
-        isCartOpen,
+      // State
+      items,
+      drawerOpen,
+      syncing,
+      lastSyncedAt,
 
-        // Getters
-        totalQuantity,
-        subTotal,
-        subtotal, // Alias
-        totalPrice,
-        total, // Total avec livraison
-        shippingCost,
-        finalPrice,
-        formattedTotal,
-        formattedDelivery,
+      // Computed
+      itemCount,
+      subtotal,
+      shipping,
+      tax,
+      discount,
+      total,
 
-        // Actions Core
-        addItem,
-        updateQuantity,
-        removeItem,
-        clearCart,
-
-        // Actions Server
-        syncCartWithServer,
-        loadCartFromServer,
-
-        // Actions Coupon
-        applyCoupon,
-        removeCoupon,
-
-        // Actions Shared Cart
-        storeSharedCart,
-        fetchSharedCartByToken,
-        processSharedPayment,
-
-        // Actions Delivery
-        setDeliveryInfo,
-
-        // UI Actions
-        toggleCart
-    }
-})
-
-
+      // Actions
+      addItem,
+      updateQuantity,
+      removeItem,
+      clear,
+      toggleDrawer,
+      validateStock,
+      getCheckoutData,
+      syncWithBackend,
+    };
+  },
+  {
+    persist: {
+      storage: typeof window !== "undefined" ? localStorage : undefined,
+      pick: ["items"],
+    },
+  },
+);

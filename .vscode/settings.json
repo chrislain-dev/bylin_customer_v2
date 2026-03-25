@@ -1,0 +1,5 @@
+{
+  "tailwindCSS.suggestCanonicalClasses": false,
+  "editor.fontFamily": "'Fira Code', monospace",
+  "editor.fontLigatures": true
+}

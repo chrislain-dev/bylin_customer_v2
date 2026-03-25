@@ -1,20 +1,17 @@
 <script setup lang="ts">
-import type { HomeContentResponse } from '~/types/home'
-
-// Fetch global navigation data
-// Nuxt will deduplicate this request if it's also made in the page with the same key/URL
-const { data } = await useApi<HomeContentResponse>('/content/home')
-const navigation = computed(() => data.value?.navigation || [])
+const { navigation, pending } = useCategories()
 </script>
 
 <template>
-    <div class="min-h-screen flex flex-col bg-gray-50 font-sans">
-        <LayoutMainHeader :navigation="navigation" />
+  <div class="min-h-screen flex flex-col">
+    <AppHeader :navigation="navigation || []" :loading="pending" />
 
-        <main class="flex-grow">
-            <slot />
-        </main>
+    <main class="flex-1">
+      <slot />
+    </main>
 
-        <LayoutMainFooter />
-    </div>
+    <ClientOnly>
+      <AppFooter />
+    </ClientOnly>
+  </div>
 </template>
