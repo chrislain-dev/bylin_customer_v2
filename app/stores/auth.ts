@@ -97,7 +97,7 @@ export const useAuthStore = defineStore("auth", () => {
       // First, get CSRF cookie for stateful authentication
       await client("/sanctum/csrf-cookie");
       
-      const response = await client("/api/v1/auth/customer/google/id-token", {
+      const response = await client<{ data?: { customer?: { first_name?: string } } }>("/api/v1/auth/customer/google/id-token", {
         method: "POST",
         body: { credential },
       });
@@ -112,7 +112,7 @@ export const useAuthStore = defineStore("auth", () => {
         icon: "i-heroicons-check-circle",
       });
 
-      router.push("/account");
+      await navigateTo("/account");
     } catch (error: any) {
       const message = error?.data?.message || "Impossible de se connecter avec Google";
       toast.add({
@@ -134,9 +134,9 @@ export const useAuthStore = defineStore("auth", () => {
 
       // Clear stores
       const cartStore = useCartStore();
-      const wishlistStore = useWishlistStore();
+      const wishlistStore = useWishlist();
       cartStore.clear();
-      wishlistStore.clear();
+      wishlistStore.items.value = [];
 
       toast.add({
         title: "Déconnexion réussie",
@@ -152,6 +152,17 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
+  async function updateProfile(data: any) {
+    const client = useSanctumClient();
+
+    await client("/api/v1/customer/profile", {
+      method: "PUT",
+      body: data,
+    });
+
+    await useSanctumAuth().refreshIdentity();
+  }
+
   return {
     user,
     isAuthenticated,
@@ -160,5 +171,6 @@ export const useAuthStore = defineStore("auth", () => {
     register,
     loginWithGoogle,
     logout,
+    updateProfile,
   };
 });

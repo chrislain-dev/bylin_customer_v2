@@ -163,7 +163,7 @@ export const useHomeContent = () => {
     error.value = null;
 
     try {
-      const { data } = await useFetch(
+      const { data } = await useFetch<{ success: boolean; data: any; timestamp?: number }>(
         `${config.public.apiBase}/v1/content/home`,
         {
           method: "GET",
@@ -193,8 +193,8 @@ export const useHomeContent = () => {
       } else {
         throw new Error("Failed to fetch home content");
       }
-    } catch (e) {
-      error.value = e.message || "Une erreur est survenue";
+    } catch (e: any) {
+      error.value = e?.message || "Une erreur est survenue";
       console.error("Error fetching home content:", e);
     } finally {
       loading.value = false;

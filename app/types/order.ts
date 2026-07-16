@@ -1,3 +1,8 @@
+export type OrderStatus = "pending" | "processing" | "confirmed" | "shipped" | "delivered" | "cancelled" | "refunded";
+export type PaymentStatus = "pending" | "authorized" | "paid" | "partially_paid" | "failed" | "refunded" | "partially_refunded";
+export type PaymentMethod = "fedapay" | "cash" | "manual" | "card" | "mobile_money";
+export type ShippingMethod = "standard" | "express" | "pickup";
+
 export interface Address {
   id?: string;
   first_name: string;
@@ -31,6 +36,7 @@ export interface Order {
   created_at: string;
   items: OrderItem[];
   shipping_address: Address;
+  payment_url?: string | null;
 }
 
 export interface CheckoutState {

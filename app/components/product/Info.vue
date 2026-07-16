@@ -45,35 +45,48 @@
       </div>
     </div>
 
+    <div v-if="product.is_preorder_enabled" class="rounded-2xl border border-orange-200 bg-orange-50 p-4 text-orange-900 dark:bg-orange-500/10 dark:text-orange-100 dark:border-orange-500/30">
+      <div class="flex items-start gap-3">
+        <Icon name="heroicons:clock" class="w-5 h-5 mt-0.5" />
+        <div>
+          <p class="font-black uppercase text-sm">Produit disponible en précommande</p>
+          <p class="font-mono text-xs mt-1 opacity-80">{{ product.preorder_message || 'Réserve cette pièce maintenant. Elle sera expédiée dès disponibilité.' }}</p>
+          <p v-if="product.preorder_available_date" class="font-mono text-xs mt-2">Disponibilité estimée : {{ new Date(product.preorder_available_date).toLocaleDateString('fr-FR') }}</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Description -->
     <div>
       <p v-if="product.short_description" class="font-bold text-sm mb-2">{{ product.short_description }}</p>
       <p class="font-mono text-sm leading-relaxed opacity-80 text-justify">{{ product.description }}</p>
     </div>
 
-    <!-- Sélecteur Couleur (si variations disponibles) -->
-    <div v-if="availableColors.length > 0">
-      <div class="flex justify-between mb-2 font-mono text-xs uppercase">
+    <!-- Sélecteur Couleur pro -->
+    <div v-if="availableColors.length > 0" class="rounded-2xl border border-black/10 dark:border-white/10 p-4">
+      <div class="flex justify-between mb-3 font-mono text-xs uppercase">
         <span>Couleur</span>
+        <span class="opacity-60">{{ selectedColor || 'Choisir' }}</span>
       </div>
-      <div class="flex flex-wrap gap-2">
+      <div class="flex flex-wrap gap-3">
         <button v-for="color in availableColors" :key="color" @click="selectedColor = color"
-          class="px-4 py-2 border border-black/20 dark:border-white/20 hover:border-[#0066bf] transition-all font-mono text-xs"
-          :class="selectedColor === color ? 'bg-[#1a1a1a] text-white dark:bg-white dark:text-black border-[#0066bf]' : ''">
-          {{ color }}
+          class="group flex items-center gap-2 rounded-full border px-3 py-2 transition-all font-mono text-xs"
+          :class="selectedColor === color ? 'border-[#0066bf] ring-2 ring-[#0066bf]/20' : 'border-black/10 dark:border-white/10 hover:border-black'">
+          <span class="h-6 w-6 rounded-full border border-black/10 shadow-inner" :style="{ backgroundColor: colorHex(color) }"></span>
+          <span>{{ color }}</span>
         </button>
       </div>
     </div>
 
-    <!-- Sélecteur Taille (si variations disponibles) -->
-    <div v-if="availableSizes.length > 0">
-      <div class="flex justify-between mb-2 font-mono text-xs uppercase">
+    <!-- Sélecteur Taille pro -->
+    <div v-if="availableSizes.length > 0" class="rounded-2xl border border-black/10 dark:border-white/10 p-4">
+      <div class="flex justify-between mb-3 font-mono text-xs uppercase">
         <span>Taille</span>
         <button @click="showSizeGuide = true" class="underline decoration-[#0066bf]">Guide des tailles</button>
       </div>
-      <div class="grid grid-cols-4 gap-2">
+      <div class="grid grid-cols-4 sm:grid-cols-5 gap-2">
         <button v-for="size in availableSizes" :key="size" @click="selectedSize = size"
-          class="border border-black/20 dark:border-white/20 py-3 hover:bg-[#0066bf] hover:text-white hover:border-[#0066bf] transition-all"
+          class="rounded-xl border border-black/20 dark:border-white/20 py-3 hover:bg-[#0066bf] hover:text-white hover:border-[#0066bf] transition-all font-black"
           :class="selectedSize === size ? 'bg-[#1a1a1a] text-white dark:bg-white dark:text-black' : ''">
           {{ size }}
         </button>
@@ -454,6 +467,19 @@ const decreaseQuantity = () => {
 const validateQuantity = () => {
   if (quantity.value < 1) quantity.value = 1
   if (quantity.value > maxStock.value) quantity.value = maxStock.value
+}
+
+const colorHex = (color: string) => {
+  const normalized = color.toLowerCase().trim()
+  const palette: Record<string, string> = {
+    noir: '#111111', black: '#111111', blanc: '#ffffff', white: '#ffffff',
+    rouge: '#dc2626', red: '#dc2626', bleu: '#2563eb', blue: '#2563eb',
+    vert: '#16a34a', green: '#16a34a', jaune: '#facc15', yellow: '#facc15',
+    rose: '#f472b6', pink: '#f472b6', beige: '#d6c3a5', marron: '#7c2d12', brown: '#7c2d12',
+    gris: '#9ca3af', gray: '#9ca3af', grey: '#9ca3af', violet: '#7c3aed', purple: '#7c3aed',
+    orange: '#f97316'
+  }
+  return normalized.startsWith('#') ? color : (palette[normalized] || '#d1d5db')
 }
 
 // Sélectionner automatiquement la première option si disponible

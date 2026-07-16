@@ -16,6 +16,17 @@ const toggleMobileMenu = () => {
       isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
 
+const fallbackNavigation: NavigationItem[] = [
+      { label: 'Accueil', url: '/' },
+      { label: 'Bylin', url: '/bylin' },
+      { label: 'Boutique', url: '/products' },
+      { label: 'Catégories', url: '/categories' },
+      { label: 'À propos', url: '/about' },
+      { label: 'Contact', url: '/contact' },
+]
+
+const displayNavigation = computed(() => props.navigation?.length ? props.navigation : fallbackNavigation)
+
 // User Dropdown
 const userMenuItems = computed(() => {
       if (authStore.isAuthenticated) {
@@ -139,12 +150,12 @@ const userMenuItems = computed(() => {
                         </div>
 
                         <!-- Desktop Navigation -->
-                        <AppHeaderNavigation :navigation="navigation" />
+                        <AppHeaderNavigation :navigation="displayNavigation" />
                   </div>
             </header>
 
             <!-- Mobile Menu -->
-            <AppHeaderMobileMenu v-model:open="isMobileMenuOpen" :navigation="navigation" />
+            <AppHeaderMobileMenu v-model:open="isMobileMenuOpen" :navigation="displayNavigation" />
 
             <!-- Search Modal -->
             <AppHeaderSearch v-model:open="isSearchOpen" />

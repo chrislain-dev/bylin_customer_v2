@@ -115,6 +115,13 @@
 const checkoutStore = useCheckoutStore()
 const cartStore = useCartStore()
 const router = useRouter()
+const route = useRoute()
+
+// Cahier des charges §9 : le bouton "Commander via WhatsApp" du panier
+// arrive ici avec ?channel=whatsapp
+onMounted(() => {
+  checkoutStore.setChannel(route.query.channel === 'whatsapp' ? 'whatsapp' : 'online')
+})
 
 const cities = ['Cotonou', 'Porto-Novo', 'Abomey-Calavi', 'Parakou', 'Ouidah', 'Bohicon']
 

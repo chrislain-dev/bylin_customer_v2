@@ -48,26 +48,22 @@ const handleGoogleError = () => {
 <template>
       <div class="space-y-4">
             <!-- Google Sign-In Button - Lazy loaded -->
-            <div v-if="showGoogleButton" class="w-full flex justify-center min-h-[44px]">
-                  <GoogleSignInButton
-                        @success="handleGoogleSuccess"
-                        @error="handleGoogleError"
-                        :button-config="{
-                              type: 'standard',
-                              theme: 'filled_black',
-                              size: 'large',
-                              text: 'continue_with',
-                              shape: 'rectangular',
-                              logo_alignment: 'left',
-                              width: '100%'
-                        }"
-                        class="w-full"
-                  />
+            <div v-if="showGoogleButton" class="flex justify-center items-center min-h-11">
+                  <GoogleSignInButton @success="handleGoogleSuccess" @error="handleGoogleError" :button-config="{
+                        type: 'standard',
+                        theme: 'filled_black',
+                        size: 'large',
+                        text: 'continue_with',
+                        shape: 'rectangular',
+                        logo_alignment: 'left'
+                  }" />
             </div>
-            
+
             <!-- Loading placeholder while Google loads -->
-            <div v-else class="w-full h-[44px] bg-white/10 rounded-lg animate-pulse flex items-center justify-center">
-                  <span class="text-white/40 text-sm">Chargement...</span>
+            <div v-else class="flex justify-center items-center min-h-11">
+                  <div class="h-11 w-60 bg-white/10 rounded-lg animate-pulse flex items-center justify-center">
+                        <span class="text-white/40 text-sm">Chargement...</span>
+                  </div>
             </div>
 
             <!-- Divider -->

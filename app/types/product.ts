@@ -21,6 +21,7 @@ export interface ProductVariation {
 
   price: number;
   compare_price?: number | null;
+  compare_at_price?: number | null;
 
   stock_quantity: number;
   stock_status: StockStatus;
@@ -33,6 +34,7 @@ export interface Product {
   id: string;
   brand_id: string;
   collection_id?: string | null;
+  collection?: { id: string; name: string; slug: string } | null;
 
   name: string;
   slug: string;
@@ -42,6 +44,7 @@ export interface Product {
 
   price: number;
   compare_price?: number | null;
+  compare_at_price?: number | null;
 
   status: ProductStatus;
   is_featured: boolean;
@@ -87,12 +90,15 @@ export interface ProductFilters {
   is_new?: boolean;
   is_on_sale?: boolean;
   in_stock?: boolean;
-  sort_by?: "price" | "name" | "newest" | "rating" | "created_at";
+  sort_by?: "price" | "name" | "newest" | "rating" | "rating_average" | "created_at";
   sort_order?: "asc" | "desc";
   page?: number;
   per_page?: number;
   colors?: string[];
   sizes?: string[];
+  collection_id?: string;
+  only_bylin?: boolean;
+  exclude_bylin?: boolean;
 }
 
 export function calculateDiscount(

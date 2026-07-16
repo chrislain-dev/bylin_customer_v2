@@ -1,4 +1,3 @@
-// stores/cart.ts
 import { defineStore } from "pinia";
 import type { CartItem, AddToCartPayload } from "~/types/cart";
 import type { Product } from "~/types/product";
@@ -15,6 +14,8 @@ export const useCartStore = defineStore(
     const drawerOpen = ref(false);
     const syncing = ref(false);
     const lastSyncedAt = ref<string | null>(null);
+    const couponCode = ref<string | null>(null);
+    const serverDiscount = ref(0);
 
     // Computed - Totaux
     const itemCount = computed(() =>
@@ -30,16 +31,12 @@ export const useCartStore = defineStore(
       return items.value.length > 0 ? 2000 : 0;
     });
 
-    const tax = computed(() => {
-      return Math.round(subtotal.value * 0.18);
-    });
+    const discount = computed(() => serverDiscount.value);
 
-    const discount = computed(() => {
-      return 0;
-    });
+    const tax = computed(() => 0);
 
     const total = computed(
-      () => subtotal.value + shipping.value + tax.value - discount.value,
+      () => subtotal.value + shipping.value - discount.value,
     );
 
     // Backend sync functions
@@ -49,10 +46,13 @@ export const useCartStore = defineStore(
       syncing.value = true;
       try {
         // Le client Sanctum gère automatiquement l'auth et les cookies
-        const response = await client<{ success: boolean; data: { items: CartItem[] } }>("/api/v1/customer/cart");
+        const response = await client<{ success: boolean; data: { id?: string; items: CartItem[]; coupon_code?: string | null; discount_amount?: number } }>("/api/v1/customer/cart");
 
         // The API returns a Cart object with items array
-        items.value = response.data?.items || [];
+        const cartId = response.data?.id
+        items.value = (response.data?.items || []).map((item) => ({ ...item, cart_id: item.cart_id || cartId }));
+        couponCode.value = response.data?.coupon_code ?? null;
+        serverDiscount.value = response.data?.discount_amount ?? 0;
         lastSyncedAt.value = new Date().toISOString();
       } catch (error: any) {
         console.error("Failed to sync cart:", error);
@@ -61,17 +61,17 @@ export const useCartStore = defineStore(
       }
     }
 
-    async function addToBackend(payload: AddToCartPayload): Promise<boolean> {
-      if (!authStore.isAuthenticated) return false;
+    async function addToBackend(payload: AddToCartPayload): Promise<CartItem | null> {
+      if (!authStore.isAuthenticated) return null;
 
       try {
         // Le client Sanctum inclut automatiquement CSRF token et cookies
-        await client<{ data: CartItem }>("/api/v1/customer/cart/items", {
+        const response = await client<{ data: CartItem }>("/api/v1/customer/cart/items", {
           method: "POST",
           body: payload,
         });
 
-        return true;
+        return response.data || null;
       } catch (error: any) {
         console.error("Failed to add to cart:", error);
         throw error;
@@ -197,11 +197,15 @@ export const useCartStore = defineStore(
         // Add to backend first if authenticated
         if (authStore.isAuthenticated) {
           try {
-            await addToBackend({
+            const backendItem = await addToBackend({
               product_id: product.id,
               variation_id: variationId,
               quantity,
             });
+            if (backendItem?.id) {
+              newItem.id = backendItem.id;
+              newItem.cart_id = backendItem.cart_id;
+            }
           } catch (error) {
             toast.add({
               title: "Erreur",
@@ -281,7 +285,8 @@ export const useCartStore = defineStore(
       if (index === -1) return;
 
       const item = items.value[index];
-      const removedItem = { ...item };
+      if (!item) return;
+      const removedItem = item;
 
       // Remove local optimistically
       items.value.splice(index, 1);
@@ -312,9 +317,72 @@ export const useCartStore = defineStore(
       });
     }
 
-    function clear() {
+    async function clear(options: { skipBackend?: boolean } = {}) {
       items.value = [];
+      couponCode.value = null;
+      serverDiscount.value = 0;
       drawerOpen.value = false;
+
+      // Bug fix : le panier serveur doit aussi être vidé, sinon il
+      // réapparaît à la prochaine synchronisation.
+      if (!options.skipBackend && authStore.isAuthenticated) {
+        try {
+          await client("/api/v1/customer/cart", { method: "DELETE" });
+        } catch (error) {
+          console.error("Failed to clear backend cart:", error);
+        }
+      }
+    }
+
+    async function applyCoupon(code: string): Promise<boolean> {
+      if (!authStore.isAuthenticated) {
+        toast.add({
+          title: "Connexion requise",
+          description: "Connectez-vous pour appliquer un code promo",
+          color: "warning",
+          icon: "i-heroicons-user",
+        });
+        return false;
+      }
+
+      try {
+        const response = await client<{ data: { coupon_code?: string | null; discount_amount?: number } }>(
+          "/api/v1/customer/cart/coupon",
+          { method: "POST", body: { coupon_code: code } },
+        );
+        couponCode.value = response.data?.coupon_code ?? code;
+        serverDiscount.value = response.data?.discount_amount ?? 0;
+
+        toast.add({
+          title: "Code appliqué",
+          description: `Le code ${couponCode.value} a été appliqué à votre panier`,
+          color: "success",
+          icon: "i-heroicons-ticket",
+        });
+        return true;
+      } catch (error: any) {
+        toast.add({
+          title: "Code non valide",
+          description:
+            error?.response?._data?.message ||
+            "Ce code promo n'est pas valide ou a expiré",
+          color: "error",
+          icon: "i-heroicons-x-circle",
+        });
+        return false;
+      }
+    }
+
+    async function removeCoupon(): Promise<void> {
+      if (!authStore.isAuthenticated) return;
+
+      try {
+        await client("/api/v1/customer/cart/coupon", { method: "DELETE" });
+        couponCode.value = null;
+        serverDiscount.value = 0;
+      } catch (error) {
+        console.error("Failed to remove coupon:", error);
+      }
     }
 
     function toggleDrawer() {
@@ -350,7 +418,6 @@ export const useCartStore = defineStore(
         })),
         subtotal: subtotal.value,
         shipping: shipping.value,
-        tax: tax.value,
         discount: discount.value,
         total: total.value,
       };
@@ -382,13 +449,14 @@ export const useCartStore = defineStore(
       drawerOpen,
       syncing,
       lastSyncedAt,
+      couponCode,
 
       // Computed
       itemCount,
       subtotal,
       shipping,
-      tax,
       discount,
+      tax,
       total,
 
       // Actions
@@ -396,6 +464,8 @@ export const useCartStore = defineStore(
       updateQuantity,
       removeItem,
       clear,
+      applyCoupon,
+      removeCoupon,
       toggleDrawer,
       validateStock,
       getCheckoutData,

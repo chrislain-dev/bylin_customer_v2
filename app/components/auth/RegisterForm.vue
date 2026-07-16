@@ -149,16 +149,20 @@ async function handleSubmit() {
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
-                              <UFormField label="Prénom" name="first_name" required>
+                              <UFormField label="Prénom" name="first_name" required :ui="{
+                                    label: 'text-white font-medium'
+                              }">
                                     <UInput v-model="form.first_name" placeholder="Jean" size="lg" :ui="{
-                                          base: 'bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder-white/40',
-                                    }" required />
+                                          base: 'bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder-white/40'
+                                    }" />
                               </UFormField>
 
-                              <UFormField label="Nom" name="last_name" required>
+                              <UFormField label="Nom" name="last_name" required :ui="{
+                                    label: 'text-white font-medium'
+                              }">
                                     <UInput v-model="form.last_name" placeholder="Dupont" size="lg" :ui="{
                                           base: 'bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder-white/40'
-                                    }" required />
+                                    }" />
                               </UFormField>
                         </div>
                   </div>

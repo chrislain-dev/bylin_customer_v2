@@ -4,9 +4,9 @@
     <section
       class="relative h-75 md:h-100 bg-linear-to-r from-[#1a1a1a] to-[#2a2a2a] overflow-hidden text-white">
       <div class="absolute inset-0 flex flex-col justify-center px-8 md:px-16 z-10">
-        <h1 class="text-4xl md:text-6xl font-light mb-4 font-syne">La Boutique</h1>
+        <h1 class="text-4xl md:text-6xl font-light mb-4 font-syne">Boutique non Bylin</h1>
         <p class="text-xl opacity-80 font-light max-w-xl">
-          Explorez notre collection exclusive de pièces minimalistes et intemporelles.
+          Explorez les vêtements non Bylin sélectionnés pour compléter votre vestiaire.
         </p>
       </div>
       <!-- Decorative background element -->
@@ -24,7 +24,7 @@
             <ol class="flex items-center space-x-2">
               <li><NuxtLink to="/" class="hover:text-black transition-colors">Accueil</NuxtLink></li>
               <li><span class="text-gray-300">/</span></li>
-              <li class="font-medium text-black">Boutique</li>
+              <li class="font-medium text-black">Boutique non Bylin</li>
             </ol>
           </nav>
           <div class="flex items-baseline gap-3">
@@ -416,8 +416,8 @@ const selectedCategoryName = computed(() => {
 const fetch = async (page = 1) => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
   // Map sort options to backend params
-  let sortBy = 'created_at'
-  let sortOrder = 'desc'
+  let sortBy: 'price' | 'name' | 'created_at' | 'newest' | 'rating' | 'rating_average' = 'created_at'
+  let sortOrder: 'asc' | 'desc' = 'desc'
 
   switch (selectedSort.value) {
     case 'newest': sortBy = 'created_at'; sortOrder = 'desc'; break;
@@ -435,9 +435,10 @@ const fetch = async (page = 1) => {
     min_price: priceRange.value.min !== null ? priceRange.value.min : undefined,
     max_price: priceRange.value.max || undefined,
     sort_by: sortBy,
-    sort_order: sortOrder as 'asc' | 'desc',
+    sort_order: sortOrder,
     colors: selectedColors.value,
-    sizes: selectedSizes.value
+    sizes: selectedSizes.value,
+    exclude_bylin: true
   })
 }
 
@@ -519,8 +520,8 @@ onMounted(() => {
 })
 
 useHead({
-  title: 'Boutique - Bylin',
-  meta: [{ name: 'description', content: 'Découvrez notre collection.' }]
+  title: 'Boutique non Bylin - Bylin',
+  meta: [{ name: 'description', content: 'Découvrez les vêtements non Bylin disponibles dans la boutique.' }]
 })
 </script>
 

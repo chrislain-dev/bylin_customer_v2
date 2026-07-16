@@ -2,6 +2,7 @@ import type { Product, ProductVariation } from "./product";
 
 export interface CartItem {
   id: string;
+  cart_id?: string;
   product_id: string;
   variation_id?: string | null;
 
@@ -10,6 +11,7 @@ export interface CartItem {
 
   quantity: number;
   unit_price: number;
+  price?: number;
   subtotal: number; // quantity * unit_price
 
   // Métadonnées
@@ -27,6 +29,7 @@ export interface Cart {
 }
 
 export interface AddToCartPayload {
+  cart_id?: string;
   product_id: string;
   variation_id?: string;
   quantity?: number;

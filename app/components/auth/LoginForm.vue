@@ -30,14 +30,18 @@ async function handleSubmit() {
 
 <template>
       <form class="space-y-5" @submit.prevent="handleSubmit">
-            <UFormField label="Adresse email" name="email" required>
+            <UFormField label="Adresse email" name="email" :ui="{
+                  label: 'text-white font-medium'
+            }" required>
                   <UInput v-model="form.email" type="email" placeholder="vous@exemple.com" icon="i-heroicons-envelope"
                         size="lg" :ui="{
                               base: 'bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder-white/40'
                         }" class="w-full" required />
             </UFormField>
 
-            <UFormField label="Mot de passe" name="password" required>
+            <UFormField label="Mot de passe" name="password" :ui="{
+                  label: 'text-white font-medium'
+            }" required>
                   <div class="relative">
                         <UInput v-model="form.password" :type="showPassword ? 'text' : 'password'"
                               placeholder="••••••••" icon="i-heroicons-lock-closed" size="lg" :ui="{

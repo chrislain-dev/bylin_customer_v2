@@ -3,9 +3,8 @@ import type { Address, CheckoutState } from '~/types/order'
 
 export const useCheckoutStore = defineStore('checkout', () => {
   const authStore = useAuthStore()
-  
-  // State
-  const state = ref<CheckoutState>({
+
+  const defaultState = (): CheckoutState => ({
     shippingAddress: {
       first_name: authStore.user?.first_name || '',
       last_name: authStore.user?.last_name || '',
@@ -30,6 +29,12 @@ export const useCheckoutStore = defineStore('checkout', () => {
     customerNote: ''
   })
 
+  // State
+  const state = ref<CheckoutState>(defaultState())
+
+  // Cahier des charges §9 : canal de finalisation ('online' | 'whatsapp')
+  const channel = ref<'online' | 'whatsapp'>('online')
+
   // Actions
   function setShippingAddress(address: Address) {
     state.value.shippingAddress = { ...state.value.shippingAddress, ...address }
@@ -40,6 +45,10 @@ export const useCheckoutStore = defineStore('checkout', () => {
 
   function setPaymentMethod(method: string) {
     state.value.paymentMethod = method
+  }
+
+  function setChannel(value: 'online' | 'whatsapp') {
+    channel.value = value
   }
 
   function toggleBillingAddress() {
@@ -54,12 +63,22 @@ export const useCheckoutStore = defineStore('checkout', () => {
     return !!(first_name && last_name && phone && address_line1 && city)
   }
 
+  // Bug fix : les stores "setup" n'ont pas de $reset() automatique,
+  // l'appel checkoutStore.$reset?.() ne faisait donc rien.
+  function reset() {
+    state.value = defaultState()
+    channel.value = 'online'
+  }
+
   return {
     state,
+    channel,
     setShippingAddress,
     setPaymentMethod,
+    setChannel,
     toggleBillingAddress,
-    validateShippingStep
+    validateShippingStep,
+    reset
   }
 }, {
   persist: true

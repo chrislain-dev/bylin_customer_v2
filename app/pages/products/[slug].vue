@@ -113,7 +113,7 @@ useHead({
   script: [
     {
       type: 'application/ld+json',
-      children: computed(() => product.value ? JSON.stringify({
+      innerHTML: computed(() => product.value ? JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'Product',
         name: product.value.name,

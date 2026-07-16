@@ -106,9 +106,9 @@ watch(product, (newVal) => {
     selectedColor.value = null
     selectedShoeSize.value = null
     // Auto-select defaults
-    if (availableSizes.value.length > 0) selectedSize.value = availableSizes.value[0]
-    if (availableColors.value.length > 0) selectedColor.value = availableColors.value[0]
-    if (availableShoeSizes.value.length > 0) selectedShoeSize.value = availableShoeSizes.value[0]
+    if (availableSizes.value.length > 0) selectedSize.value = availableSizes.value[0] ?? null
+    if (availableColors.value.length > 0) selectedColor.value = availableColors.value[0] ?? null
+    if (availableShoeSizes.value.length > 0) selectedShoeSize.value = availableShoeSizes.value[0] ?? null
   }
 })
 
@@ -162,7 +162,7 @@ const buttonText = computed(() => {
   if (!product.value) return ''
   if (product.value.is_variable && !selectedVariation.value) return 'Sélectionner une option'
    if (product.value.stock_quantity <= 0 && !product.value.is_variable) return 'Rupture de stock'
-   if (product.value.is_variable && selectedVariation.value?.stock_quantity <= 0) return 'Rupture de stock'
+   if (product.value.is_variable && (selectedVariation.value?.stock_quantity ?? 0) <= 0) return 'Rupture de stock'
   return 'Ajouter au panier'
 })
 
@@ -184,7 +184,7 @@ const productStore = useProducts()
 const getColorHex = (name: string) => {
   // First try to find from store colors
   const storeColor = productStore.allColors.value.find(
-    c => c.name.toLowerCase() === name.toLowerCase()
+    (c: { name: string; hex_code: string }) => c.name.toLowerCase() === name.toLowerCase()
   )
   if (storeColor?.hex_code) return storeColor.hex_code
   

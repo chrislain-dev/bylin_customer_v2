@@ -28,7 +28,23 @@
             <h2 class="text-2xl font-bold font-syne mb-6">Moyen de paiement</h2>
             
             <div class="space-y-4">
-              <!-- FedaPay -->
+              <!-- WhatsApp — Cahier des charges §9 : Option 1 -->
+              <label class="flex items-start gap-4 p-6 border rounded-xl cursor-pointer transition-all"
+                :class="checkoutStore.state.paymentMethod === 'whatsapp' ? 'border-[#25D366] bg-green-50 ring-1 ring-[#25D366]' : 'border-gray-200 hover:border-gray-300'">
+                <input type="radio" name="payment" value="whatsapp" 
+                  v-model="checkoutStore.state.paymentMethod"
+                  class="mt-1 w-4 h-4 text-green-600 focus:ring-green-500 border-gray-300">
+                <div class="flex-1">
+                  <span class="font-bold block mb-1">🟢 Commander via WhatsApp</span>
+                  <p class="text-sm text-gray-600">
+                    Finalisez votre commande avec un conseiller BYLIN : questions, accompagnement,
+                    paiement Mobile Money manuel ou sur-mesure. Un message pré-rempli avec votre
+                    récapitulatif s'ouvrira dans WhatsApp.
+                  </p>
+                </div>
+              </label>
+
+              <!-- FedaPay — Cahier des charges §9 : Option 2 -->
               <label class="flex items-start gap-4 p-6 border rounded-xl cursor-pointer transition-all"
                 :class="checkoutStore.state.paymentMethod === 'fedapay' ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500' : 'border-gray-200 hover:border-gray-300'">
                 <input type="radio" name="payment" value="fedapay" 
@@ -36,7 +52,7 @@
                   class="mt-1 w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300">
                 <div class="flex-1">
                   <div class="flex justify-between items-center mb-1">
-                    <span class="font-bold">FedaPay (Mobile Money / Carte)</span>
+                    <span class="font-bold">🔵 Payer maintenant — FedaPay (Mobile Money / Carte)</span>
                     <div class="flex gap-2">
                       <img src="https://fedapay.com/img/brand/logo_icon.svg" class="h-6 w-auto" title="FedaPay">
                     </div>
@@ -46,20 +62,6 @@
                   </p>
                 </div>
               </label>
-
-              <!-- Cash (Optional/Disabled for now based on user preference for FedaPay) -->
-              <!-- 
-              <label class="flex items-start gap-4 p-6 border rounded-xl cursor-pointer transition-all"
-                :class="checkoutStore.state.paymentMethod === 'cash' ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500' : 'border-gray-200 hover:border-gray-300'">
-                <input type="radio" name="payment" value="cash" 
-                  v-model="checkoutStore.state.paymentMethod"
-                  class="mt-1 w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300">
-                <div class="flex-1">
-                  <span class="font-bold block mb-1">Paiement à la livraison</span>
-                  <p class="text-sm text-gray-600">Payez en espèces lorsque vous recevez votre commande.</p>
-                </div>
-              </label>
-              -->
             </div>
 
             <div class="mt-8 flex justify-between items-center pt-6 border-t border-gray-100">
@@ -67,9 +69,16 @@
                 <UIcon name="i-heroicons-arrow-left" />
                 Retour
               </NuxtLink>
-              <UButton @click="processPayment" :loading="processing" size="lg" color="primary" class="px-8">
-                Payer {{ formatPrice(cartStore.total) }}
-                <UIcon name="i-heroicons-lock-closed" class="ml-2" />
+              <UButton @click="processPayment" :loading="processing" size="lg"
+                :color="isWhatsapp ? 'success' : 'primary'" class="px-8">
+                <template v-if="isWhatsapp">
+                  Envoyer sur WhatsApp
+                  <UIcon name="i-heroicons-chat-bubble-left-right" class="ml-2" />
+                </template>
+                <template v-else>
+                  Payer {{ formatPrice(cartStore.total) }}
+                  <UIcon name="i-heroicons-lock-closed" class="ml-2" />
+                </template>
               </UButton>
             </div>
           </div>
@@ -115,8 +124,12 @@
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-gray-600">Livraison</span>
-                <!-- TODO: Add shipping cost logic -->
-                <span>Gratuit</span>
+                <span v-if="cartStore.shipping === 0" class="text-green-600 font-medium">Gratuite</span>
+                <span v-else>{{ formatPrice(cartStore.shipping) }}</span>
+              </div>
+              <div v-if="cartStore.discount > 0" class="flex justify-between text-sm text-green-600">
+                <span>Réduction{{ cartStore.couponCode ? ` (${cartStore.couponCode})` : '' }}</span>
+                <span>-{{ formatPrice(cartStore.discount) }}</span>
               </div>
               <div class="flex justify-between text-lg font-bold pt-2 border-t border-gray-200 mt-2">
                 <span>Total</span>
@@ -141,40 +154,54 @@ const toast = useToast()
 
 const processing = ref(false)
 
-// Redirect if step 1 not valid
+const isWhatsapp = computed(() => checkoutStore.state.paymentMethod === 'whatsapp')
+
+// Redirect if step 1 not valid + preselect WhatsApp if the customer
+// came from the green cart button (cahier §9)
 onMounted(() => {
   if (!checkoutStore.validateShippingStep()) {
     router.push('/checkout')
+    return
+  }
+  if (checkoutStore.channel === 'whatsapp') {
+    checkoutStore.setPaymentMethod('whatsapp')
   }
 })
 
 const processPayment = async () => {
   processing.value = true
   try {
+    const whatsapp = isWhatsapp.value
+
     const payload = {
       shipping_address: checkoutStore.state.shippingAddress,
       billing_address: checkoutStore.state.useBillingAsShipping ? checkoutStore.state.shippingAddress : checkoutStore.state.billingAddress,
-      payment_method: checkoutStore.state.paymentMethod,
+      channel: whatsapp ? 'whatsapp' : 'online',
+      payment_method: whatsapp ? 'whatsapp' : checkoutStore.state.paymentMethod,
       customer_email: checkoutStore.state.shippingAddress.email,
       customer_phone: checkoutStore.state.shippingAddress.phone,
       customer_note: checkoutStore.state.customerNote
     }
 
-    console.log('Creating order...')
     const response = await orderStore.createOrder(payload)
-    console.log('Order created, response:', response)
-    
-    // Handle FedaPay Redirect
-    if (checkoutStore.state.paymentMethod === 'fedapay' && response.data.payment_url) {
-      console.log('Redirecting to FedaPay:', response.data.payment_url)
-      window.location.href = response.data.payment_url
+    const order: any = response.data
+
+    // Le backend a déjà vidé le panier serveur lors de la création
+    // de la commande : on ne vide que l'état local.
+    await cartStore.clear({ skipBackend: true })
+    checkoutStore.reset()
+
+    if (whatsapp && order?.metadata?.whatsapp_url) {
+      // Cahier §9 : ouvre WhatsApp avec le message pré-rempli
+      window.open(order.metadata.whatsapp_url, '_blank')
+      await router.push({ path: '/checkout/success', query: { channel: 'whatsapp', order: order.order_number } })
+    } else if (!whatsapp && order?.payment_url) {
+      // Redirection FedaPay
+      window.location.href = order.payment_url
+    } else if (!whatsapp && order?.metadata?.payment_url) {
+      window.location.href = order.metadata.payment_url
     } else {
-      console.log('No payment URL, redirecting to success page')
-      // Success without payment redirect (manual/cash/etc)
-      await router.push('/checkout/success')
-      console.log('Clearing cart...')
-      cartStore.clear()
-      console.log('Cart cleared!')
+      await router.push({ path: '/checkout/success', query: order?.order_number ? { order: order.order_number } : {} })
     }
 
   } catch (error: any) {

@@ -130,6 +130,7 @@ export default defineNuxtConfig({
     "/cart": { ssr: false },
     "/checkout/**": { ssr: false },
     "/account/**": { ssr: false },
+    "/gift-carts/**": { ssr: false },
   },
 
   app: {

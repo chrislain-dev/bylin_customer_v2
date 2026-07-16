@@ -18,7 +18,7 @@ function handleRegisterSuccess() {
                   <h1 class="text-3xl font-bold text-white">
                         Rejoignez Bylin
                   </h1>
-                  <p class="mt-2 text-sm text-white/60">
+                  <p class="mt-2 text-sm text-white/70">
                         Créez votre compte en quelques étapes
                   </p>
             </div>

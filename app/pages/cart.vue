@@ -80,17 +80,28 @@
             <!-- Promo Code -->
             <div class="mb-6">
               <label class="text-sm text-gray-600 mb-2 block">Code promo</label>
-              <div class="flex gap-2">
+              <div v-if="cartStore.couponCode" class="flex items-center justify-between px-4 py-2.5 bg-green-50 border border-green-200 rounded-lg">
+                <span class="text-sm font-medium text-green-700 flex items-center gap-2">
+                  <Icon name="heroicons:ticket" class="w-4 h-4" />
+                  {{ cartStore.couponCode }}
+                </span>
+                <button @click="removePromoCode" class="text-xs text-gray-500 hover:text-red-600 transition-colors">
+                  Retirer
+                </button>
+              </div>
+              <div v-else class="flex gap-2">
                 <input 
                   v-model="promoCode"
                   type="text" 
                   placeholder="Entrer le code"
                   class="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-black transition-colors"
+                  @keyup.enter="applyPromoCode"
                 />
                 <button 
                   @click="applyPromoCode"
-                  class="px-4 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-black transition-colors">
-                  Appliquer
+                  :disabled="applyingPromo"
+                  class="px-4 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-black transition-colors disabled:opacity-50">
+                  {{ applyingPromo ? '...' : 'Appliquer' }}
                 </button>
               </div>
             </div>
@@ -110,8 +121,8 @@
                 <span>Réduction</span>
                 <span class="font-medium">-{{ formatPrice(cartStore.discount) }}</span>
               </div>
-              <div class="flex justify-between text-sm">
-                <span class="text-gray-600">TVA (18%)</span>
+              <div v-if="cartStore.tax > 0" class="flex justify-between text-sm">
+                <span class="text-gray-600">TVA</span>
                 <span class="font-medium">{{ formatPrice(cartStore.tax) }}</span>
               </div>
             </div>
@@ -140,13 +151,27 @@
               <span>Vous bénéficiez de la <strong>livraison gratuite</strong> !</span>
             </div>
 
-            <!-- Checkout Button -->
-            <NuxtLink 
-              to="/checkout"
-              class="w-full flex items-center justify-center gap-2 py-4 bg-black text-white text-sm font-bold uppercase tracking-wider rounded-lg hover:bg-gray-800 transition-all duration-200 hover:shadow-lg">
-              <span>Passer commande</span>
-              <Icon name="heroicons:arrow-right" class="w-4 h-4" />
-            </NuxtLink>
+            <!-- Checkout Buttons — Cahier des charges §9 : deux parcours au choix -->
+            <div class="space-y-3">
+              <button
+                @click="orderViaWhatsapp"
+                class="w-full flex items-center justify-center gap-2 py-4 bg-[#25D366] text-white text-sm font-bold uppercase tracking-wider rounded-lg hover:bg-[#1ebe5b] transition-all duration-200 hover:shadow-lg">
+                <Icon name="heroicons:chat-bubble-left-right" class="w-4 h-4" />
+                <span>Commander via WhatsApp</span>
+              </button>
+
+              <NuxtLink 
+                to="/checkout"
+                class="w-full flex items-center justify-center gap-2 py-4 bg-blue-600 text-white text-sm font-bold uppercase tracking-wider rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-lg">
+                <span>Payer maintenant</span>
+                <Icon name="heroicons:lock-closed" class="w-4 h-4" />
+              </NuxtLink>
+
+              <p class="text-xs text-gray-500 text-center leading-relaxed pt-1">
+                Besoin de conseils ou d'un accompagnement personnalisé ?<br>
+                Finalisez votre commande via WhatsApp avec un conseiller BYLIN.
+              </p>
+            </div>
 
             <!-- Trust Badges -->
             <div class="mt-6 pt-6 border-t border-gray-100">
@@ -208,10 +233,13 @@
 import CartItem from '~/components/cart/CartItem.vue'
 
 const cartStore = useCartStore()
+const authStore = useAuthStore()
+const router = useRouter()
 const toast = useToast()
 
 // State
 const promoCode = ref('')
+const applyingPromo = ref(false)
 const showClearConfirm = ref(false)
 
 // Methods
@@ -219,9 +247,9 @@ const confirmClearCart = () => {
   showClearConfirm.value = true
 }
 
-const clearCart = () => {
-  cartStore.clear()
+const clearCart = async () => {
   showClearConfirm.value = false
+  await cartStore.clear()
   toast.add({
     title: 'Panier vidé',
     description: 'Tous les articles ont été retirés de votre panier',
@@ -230,7 +258,7 @@ const clearCart = () => {
   })
 }
 
-const applyPromoCode = () => {
+const applyPromoCode = async () => {
   if (!promoCode.value.trim()) {
     toast.add({
       title: 'Code requis',
@@ -240,14 +268,32 @@ const applyPromoCode = () => {
     })
     return
   }
-  
-  // TODO: Implement promo code logic via API
-  toast.add({
-    title: 'Code non valide',
-    description: 'Ce code promo n\'est pas valide ou a expiré',
-    icon: 'i-heroicons-x-circle',
-    color: 'error'
-  })
+
+  applyingPromo.value = true
+  try {
+    const applied = await cartStore.applyCoupon(promoCode.value.trim())
+    if (applied) promoCode.value = ''
+  } finally {
+    applyingPromo.value = false
+  }
+}
+
+const removePromoCode = async () => {
+  await cartStore.removeCoupon()
+}
+
+// Cahier des charges §9 : parcours "Commander via WhatsApp".
+// L'adresse de livraison reste nécessaire ; on passe par le checkout
+// avec le canal whatsapp, la commande sera envoyée au conseiller à l'étape suivante.
+const orderViaWhatsapp = () => {
+  if (!cartStore.validateStock()) return
+
+  if (!authStore.isAuthenticated) {
+    router.push({ path: '/auth/login', query: { redirect: '/checkout?channel=whatsapp' } })
+    return
+  }
+
+  router.push({ path: '/checkout', query: { channel: 'whatsapp' } })
 }
 
 // SEO

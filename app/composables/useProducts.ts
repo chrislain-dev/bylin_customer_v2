@@ -65,6 +65,12 @@ export const useProducts = () => {
 
       if (filters?.brand_id)
         params.append("filter[brand_id]", filters.brand_id);
+      if (filters?.collection_id)
+        params.append("filter[collection_id]", filters.collection_id);
+      if (filters?.only_bylin)
+        params.append("filter[bylin]", "1");
+      if (filters?.exclude_bylin)
+        params.append("filter[non_bylin]", "1");
       if (filters?.is_featured) params.append("filter[is_featured]", "1");
       if (filters?.is_new) params.append("filter[is_new]", "1");
       if (filters?.is_on_sale) params.append("filter[is_on_sale]", "1");

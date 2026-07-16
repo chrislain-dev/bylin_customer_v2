@@ -24,14 +24,23 @@ export interface Customer {
 export interface Address {
   id: string;
   customer_id: string;
+
   type: "shipping" | "billing";
+
+  first_name?: string;
+  last_name?: string;
+  phone: string;
+
   is_default: boolean;
+
   address_line_1: string;
   address_line_2?: string | null;
+
   city: string;
   state?: string | null;
   postal_code: string;
   country: string;
+
   created_at: string;
   updated_at: string;
 }
@@ -48,6 +57,7 @@ export interface CustomerUpdateForm {
 
 export interface AddressForm {
   type: "shipping" | "billing";
+  phone: string;
   is_default: boolean;
   address_line_1: string;
   address_line_2?: string;
