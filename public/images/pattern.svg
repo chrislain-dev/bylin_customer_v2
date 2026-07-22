@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <!-- Motif géométrique inspiré des tissus bogolan / wax ouest-africains.
+       Monochrome (currentColor) : la couleur et l'opacité se contrôlent en CSS. -->
+  <g fill="none" stroke="currentColor" stroke-width="2.5">
+    <!-- Losanges concentriques -->
+    <path d="M30 6 L54 30 L30 54 L6 30 Z" />
+    <path d="M30 16 L44 30 L30 44 L16 30 Z" />
+    <circle cx="30" cy="30" r="3" fill="currentColor" stroke="none" />
+
+    <path d="M90 66 L114 90 L90 114 L66 90 Z" />
+    <path d="M90 76 L104 90 L90 104 L76 90 Z" />
+    <circle cx="90" cy="90" r="3" fill="currentColor" stroke="none" />
+
+    <!-- Zigzags (rythme kente) -->
+    <path d="M66 12 L74 24 L82 12 L90 24 L98 12 L106 24 L114 12" />
+    <path d="M66 36 L74 48 L82 36 L90 48 L98 36 L106 48 L114 36" />
+
+    <path d="M6 72 L14 84 L22 72 L30 84 L38 72 L46 84 L54 72" />
+    <path d="M6 96 L14 108 L22 96 L30 108 L38 96 L46 108 L54 96" />
+  </g>
+  <!-- Points d'accent -->
+  <g fill="currentColor">
+    <circle cx="60" cy="60" r="2.5" />
+    <circle cx="60" cy="6" r="2" />
+    <circle cx="60" cy="114" r="2" />
+    <circle cx="6" cy="60" r="2" />
+    <circle cx="114" cy="60" r="2" />
+  </g>
+</svg>

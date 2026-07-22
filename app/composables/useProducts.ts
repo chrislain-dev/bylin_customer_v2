@@ -23,8 +23,7 @@ interface PaginationMeta {
 }
 
 export const useProducts = () => {
-  const config = useRuntimeConfig();
-  const apiBase = config.public.apiBase || "/api/v1";
+  const { apiUrl } = useApiUrl();
 
   const state = useState<ProductsState>("products-state", () => ({
     products: [],
@@ -105,7 +104,7 @@ export const useProducts = () => {
       if (filters?.page) params.append("page", String(filters.page));
 
       const response = await $fetch<{ data: Product[]; meta: PaginationMeta }>(
-        `${apiBase}/api/v1/catalog/products?${params}`,
+        apiUrl(`/api/v1/catalog/products?${params}`),
       );
 
       state.value.products = response.data || [];
@@ -133,7 +132,7 @@ export const useProducts = () => {
 
     try {
       const response = await $fetch<{ data: Product }>(
-        `${apiBase}/api/v1/catalog/products/${id}`,
+        apiUrl(`/api/v1/catalog/products/${id}`),
       );
       return response.data;
     } catch (err: any) {
@@ -155,7 +154,7 @@ export const useProducts = () => {
     try {
       // L'API accepte ID ou slug dans le endpoint show
       const response = await $fetch<{ data: Product }>(
-        `${apiBase}/api/v1/catalog/products/${slug}`,
+        apiUrl(`/api/v1/catalog/products/${slug}`),
       );
       return response.data;
     } catch (err: any) {
@@ -173,7 +172,7 @@ export const useProducts = () => {
   const fetchPreorderInfo = async (id: string) => {
     try {
       const response = await $fetch<{ data: any }>(
-        `${apiBase}/api/v1/catalog/products/${id}/preorder-info`,
+        apiUrl(`/api/v1/catalog/products/${id}/preorder-info`),
       );
       return response.data;
     } catch (err: any) {

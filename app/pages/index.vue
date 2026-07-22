@@ -44,30 +44,33 @@ const bestOffer = computed(() => homeContent.value?.best_offer || null)
 const heroSlides = [
       {
             id: 1,
-            title: 'Collection Été 2025',
-            subtitle: 'Nouvelle Arrivage',
-            description: "Découvrez nos dernières créations inspirées de l'élégance africaine",
-            image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1920&h=1080&fit=crop',
-            cta: 'Découvrir',
-            ctaLink: '/collections/ete-2025',
+            title: "L'Élégance signée Bylin",
+            subtitle: 'Créé à Cotonou',
+            description:
+                  "Des coupes contemporaines, une âme africaine. Chaque pièce est pensée et confectionnée au Bénin.",
+            image: '/images/IMG_0062.jpg',
+            cta: 'Découvrir la marque',
+            ctaLink: '/bylin',
       },
       {
             id: 2,
-            title: 'Tenues Traditionnelles',
-            subtitle: 'Authenticité & Modernité',
-            description: 'Un mariage parfait entre tradition et tendance contemporaine',
-            image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1920&h=1080&fit=crop',
-            cta: 'Explorer',
-            ctaLink: '/collections/traditionnelles',
+            title: 'Le Blazer, réinventé',
+            subtitle: 'Savoir-faire local',
+            description:
+                  "Tissus nobles, finitions artisanales : le vestiaire moderne aux racines ouest-africaines.",
+            image: '/images/IMG_0027_1.jpg',
+            cta: 'Voir les nouveautés',
+            ctaLink: '/products',
       },
       {
             id: 3,
-            title: "Jusqu'à -50%",
-            subtitle: 'Offres Exceptionnelles',
-            description: 'Profitez de nos réductions sur une sélection de produits',
-            image: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=1920&h=1080&fit=crop',
-            cta: 'Voir les offres',
-            ctaLink: '/promotions',
+            title: 'Entre Tradition & Modernité',
+            subtitle: 'Collections Bylin',
+            description:
+                  "Du wax à la maille, nos collections célèbrent l'héritage africain avec un regard neuf.",
+            image: '/images/IMG_0090.jpg',
+            cta: 'Explorer les collections',
+            ctaLink: '/collections',
       },
 ]
 
@@ -174,11 +177,16 @@ const formatPrice = (price: number) =>
                   <div v-if="homeLoading"
                         class="fixed inset-0 z-50 bg-white dark:bg-gray-950 flex items-center justify-center">
                         <div class="text-center space-y-6">
-                              <img src="/images/logo-white.png" alt="Bylin" class="h-20 w-auto mx-auto animate-pulse" />
+                              <img src="/images/logo-dark.png" alt="Bylin"
+                                    class="h-20 w-auto mx-auto animate-pulse dark:hidden" />
+                              <img src="/images/logo-white.png" alt="Bylin"
+                                    class="h-20 w-auto mx-auto animate-pulse hidden dark:block" />
                               <div class="flex gap-2 justify-center">
-                                    <div v-for="i in 3" :key="i"
-                                          class="w-3 h-3 bg-primary-500 rounded-full animate-bounce"
-                                          :style="`animation-delay: ${(i - 1) * 150}ms`" />
+                                    <div class="w-3 h-3 bg-terra-500 rounded-full animate-bounce" />
+                                    <div class="w-3 h-3 bg-ocre-400 rounded-full animate-bounce"
+                                          style="animation-delay: 150ms" />
+                                    <div class="w-3 h-3 bg-[#2f6b3a] rounded-full animate-bounce"
+                                          style="animation-delay: 300ms" />
                               </div>
                               <p class="text-sm text-gray-500 tracking-wide">Chargement...</p>
                         </div>
@@ -193,13 +201,15 @@ const formatPrice = (price: number) =>
                               <img :src="slide.image" :alt="slide.title" class="w-full h-full object-cover" />
                               <div
                                     class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+                              <div class="absolute inset-0 motif-africain motif-africain-clair" />
                               <div class="absolute inset-0 flex items-center">
                                     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
                                           <div class="max-w-2xl space-y-6">
-                                                <UBadge color="primary" variant="solid" size="lg"
-                                                      class="uppercase tracking-wider">
+                                                <span
+                                                      class="inline-flex items-center gap-2 bg-terra-500 text-white text-sm font-semibold uppercase tracking-wider px-4 py-1.5 rounded-full">
+                                                      <span class="w-1.5 h-1.5 rounded-full bg-ocre-300" />
                                                       {{ slide.subtitle }}
-                                                </UBadge>
+                                                </span>
                                                 <h1 class="text-5xl lg:text-7xl font-bold text-white leading-tight">
                                                       {{ slide.title }}
                                                 </h1>
@@ -233,18 +243,23 @@ const formatPrice = (price: number) =>
                               currentSlide === index ? 'w-8 bg-white' : 'w-2 bg-white/50',
                         ]" @click="currentSlide = index" />
                   </div>
+
+                  <!-- Bande kente signature -->
+                  <div class="absolute bottom-0 left-0 right-0 h-2 kente-bar z-10" />
             </section>
 
             <!-- ═══ DERNIÈRE COLLECTION ═══════════════════════════════════════════════ -->
-            <section class="py-16 lg:py-24 bg-gray-50 dark:bg-gray-900">
+            <section class="py-16 lg:py-24 bg-sable-50 dark:bg-gray-900 motif-africain">
                   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div class="text-center space-y-4 mb-12">
-                              <UBadge color="primary" variant="subtle" size="lg" class="uppercase tracking-wider">
+                              <span
+                                    class="inline-block bg-terra-100 text-terra-700 dark:bg-terra-900 dark:text-terra-200 text-sm font-semibold uppercase tracking-wider px-4 py-1.5 rounded-full">
                                     Nouveautés
-                              </UBadge>
+                              </span>
                               <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white">
                                     Dernière Collection
                               </h2>
+                              <div class="w-24 h-1.5 kente-bar mx-auto rounded-full" />
                               <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
                                     Découvrez nos dernières créations, un mélange parfait d'authenticité africaine et de
                                     modernité
@@ -328,6 +343,7 @@ const formatPrice = (price: number) =>
                               <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white">
                                     Explorez par Catégorie
                               </h2>
+                              <div class="w-24 h-1.5 kente-bar mx-auto rounded-full" />
                               <p class="text-lg text-gray-600 dark:text-gray-400">
                                     Trouvez exactement ce que vous cherchez
                               </p>
@@ -348,7 +364,7 @@ const formatPrice = (price: number) =>
                                           :alt="category.name"
                                           class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                     <div v-else
-                                          class="w-full h-full bg-linear-to-br from-primary-400 to-primary-700 flex items-center justify-center">
+                                          class="w-full h-full bg-linear-to-br from-terra-400 via-terra-600 to-ocre-700 flex items-center justify-center motif-africain motif-africain-clair">
                                           <span class="text-5xl font-black text-white/30 uppercase tracking-widest">
                                                 {{ category.name.charAt(0) }}
                                           </span>
@@ -373,7 +389,7 @@ const formatPrice = (price: number) =>
 
             <!-- ═══ MEILLEURE OFFRE (masquée si null) ═════════════════════════════════ -->
             <section v-if="!homeLoading && bestOffer"
-                  class="py-16 lg:py-24 bg-linear-to-br from-primary-50 to-primary-100 dark:from-primary-950 dark:to-primary-900">
+                  class="py-16 lg:py-24 bg-linear-to-br from-terra-50 to-ocre-100 dark:from-terra-950 dark:to-ocre-950 motif-africain">
                   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div class="grid lg:grid-cols-2 gap-12 items-center">
                               <div class="relative">
@@ -410,7 +426,7 @@ const formatPrice = (price: number) =>
                                           <div class="grid grid-cols-4 gap-4 text-center">
                                                 <div v-for="(val, unit) in countdown" :key="unit">
                                                       <div
-                                                            class="text-3xl font-bold text-primary-600 dark:text-primary-400">
+                                                            class="text-3xl font-bold text-terra-600 dark:text-terra-300">
                                                             {{ val }}
                                                       </div>
                                                       <div class="text-xs text-gray-500 uppercase">
@@ -429,7 +445,7 @@ const formatPrice = (price: number) =>
                                     </div>
 
                                     <div class="flex items-end gap-4">
-                                          <div class="text-5xl font-bold text-primary-600 dark:text-primary-400">
+                                          <div class="text-5xl font-bold text-terra-600 dark:text-terra-300">
                                                 {{ formatPrice(bestOffer.discount_price) }}
                                           </div>
                                           <div class="text-2xl text-gray-400 line-through mb-2">
@@ -468,6 +484,7 @@ const formatPrice = (price: number) =>
                               <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white">
                                     Ce que disent nos clients
                               </h2>
+                              <div class="w-24 h-1.5 kente-bar mx-auto rounded-full" />
                               <div class="flex items-center justify-center gap-2">
                                     <div class="flex">
                                           <UIcon v-for="i in 5" :key="i" name="i-heroicons-star-solid"
@@ -502,20 +519,21 @@ const formatPrice = (price: number) =>
             </section>
 
             <!-- ═══ POURQUOI BYLIN ════════════════════════════════════════════════════ -->
-            <section class="py-16 lg:py-24 bg-gray-50 dark:bg-gray-900">
+            <section class="py-16 lg:py-24 bg-sable-50 dark:bg-gray-900 motif-africain">
                   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div class="text-center mb-12">
                               <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white">
                                     Pourquoi Choisir Bylin ?
                               </h2>
+                              <div class="w-24 h-1.5 kente-bar mx-auto rounded-full mt-4" />
                         </div>
                         <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
                               <div v-for="item in whyBylin" :key="item.title"
                                     class="text-center space-y-4 p-6 bg-white dark:bg-gray-800 rounded-2xl hover:shadow-xl transition-shadow">
                                     <div
-                                          class="inline-flex items-center justify-center w-16 h-16 bg-primary-100 dark:bg-primary-900 rounded-full">
+                                          class="inline-flex items-center justify-center w-16 h-16 bg-terra-100 dark:bg-terra-900 rounded-full">
                                           <UIcon :name="item.icon"
-                                                class="w-8 h-8 text-primary-600 dark:text-primary-400" />
+                                                class="w-8 h-8 text-terra-600 dark:text-terra-300" />
                                     </div>
                                     <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ item.title }}</h3>
                                     <p class="text-gray-600 dark:text-gray-400 leading-relaxed">{{ item.description }}

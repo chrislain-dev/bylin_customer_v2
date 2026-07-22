@@ -1,8 +1,0 @@
-{
-  "rewrites": [
-    {
-      "source": "/((?!maintenance.html$|.*\\.(?:css|js|png|jpg|jpeg|svg|ico)$).*)",
-      "destination": "/maintenance.html"
-    }
-  ]
-}

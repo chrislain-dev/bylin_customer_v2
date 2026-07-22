@@ -164,7 +164,7 @@ export const useHomeContent = () => {
 
     try {
       const { data } = await useFetch<{ success: boolean; data: any; timestamp?: number }>(
-        `${config.public.apiBase}/v1/content/home`,
+        useApiUrl().apiUrl("/api/v1/content/home"),
         {
           method: "GET",
           key: "home-content",

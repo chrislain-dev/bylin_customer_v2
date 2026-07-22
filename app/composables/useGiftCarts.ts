@@ -28,7 +28,7 @@ export interface GiftCart {
 
 export const useGiftCarts = () => {
   const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase || ''
+  const { apiUrl } = useApiUrl()
   const client = useSanctumClient()
 
   const buildPublicUrl = (token: string) => {
@@ -44,7 +44,7 @@ export const useGiftCarts = () => {
   }
 
   const fetchGiftCart = async (token: string) => {
-    const response = await $fetch<{ success: boolean; data: GiftCart }>(`${apiBase}/api/v1/gift-carts/${token}`)
+    const response = await $fetch<{ success: boolean; data: GiftCart }>(apiUrl(`/api/v1/gift-carts/${token}`))
     return response.data
   }
 
@@ -57,7 +57,7 @@ export const useGiftCarts = () => {
     message?: string
   }) => {
     return await $fetch<{ success: boolean; data: GiftCartContributor; message: string }>(
-      `${apiBase}/api/v1/gift-carts/${token}/contribute`,
+      apiUrl(`/api/v1/gift-carts/${token}/contribute`),
       { method: 'POST', body: payload }
     )
   }
