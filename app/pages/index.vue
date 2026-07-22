@@ -137,7 +137,7 @@ const reviews = [
       {
             id: 1,
             name: 'Aminata Diallo',
-            avatar: 'https://i.pravatar.cc/150?img=1',
+            avatar: 'https://ui-avatars.com/api/?name=Aminata+Diallo&background=C83E44&color=fff',
             rating: 5,
             date: '15 Déc 2024',
             comment: 'Qualité exceptionnelle ! Les tissus sont magnifiques et la coupe parfaite. Je recommande vivement Bylin.',
@@ -145,7 +145,7 @@ const reviews = [
       {
             id: 2,
             name: 'Jean-Baptiste Koffi',
-            avatar: 'https://i.pravatar.cc/150?img=12',
+            avatar: 'https://ui-avatars.com/api/?name=Jean+Koffi&background=C83E24&color=fff',
             rating: 5,
             date: '10 Déc 2024',
             comment: "Service impeccable, livraison rapide à Cotonou. Les vêtements sont encore plus beaux en vrai !",
@@ -153,7 +153,7 @@ const reviews = [
       {
             id: 3,
             name: 'Fatima Touré',
-            avatar: 'https://i.pravatar.cc/150?img=5',
+            avatar: 'https://ui-avatars.com/api/?name=Fatima+Touré&background=C83E14&color=fff',
             rating: 4,
             date: '5 Déc 2024',
             comment: 'Très satisfaite de mon achat. Le style est unique et authentique. Parfait pour les grandes occasions.',
