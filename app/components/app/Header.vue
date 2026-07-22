@@ -25,7 +25,7 @@ const fallbackNavigation: NavigationItem[] = [
       { label: 'Contact', url: '/contact' },
 ]
 
-const displayNavigation = computed(() => props.navigation?.length ? props.navigation : fallbackNavigation)
+const displayNavigation = computed(() => props.navigation?.length ? fallbackNavigation : props.navigation)
 
 // User Dropdown
 const userMenuItems = computed(() => {

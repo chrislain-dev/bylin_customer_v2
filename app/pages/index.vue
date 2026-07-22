@@ -194,13 +194,13 @@ const formatPrice = (price: number) =>
             </Transition>
 
             <!-- ═══ HERO SLIDER ═══════════════════════════════════════════════════════ -->
-            <section class="relative h-[600px] lg:h-[700px] overflow-hidden">
+            <section class="relative h-150 lg:h-175 overflow-hidden">
                   <TransitionGroup name="fade">
                         <div v-for="(slide, index) in heroSlides" v-show="currentSlide === index" :key="slide.id"
                               class="absolute inset-0">
                               <img :src="slide.image" :alt="slide.title" class="w-full h-full object-cover" />
                               <div
-                                    class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+                                    class="absolute inset-0 bg-linear-to-r from-black/70 via-black/50 to-transparent" />
                               <div class="absolute inset-0 motif-africain motif-africain-clair" />
                               <div class="absolute inset-0 flex items-center">
                                     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
@@ -270,7 +270,7 @@ const formatPrice = (price: number) =>
                         <div v-if="homeLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                               <div v-for="i in 4" :key="i"
                                     class="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden animate-pulse">
-                                    <div class="aspect-[3/4] bg-gray-200 dark:bg-gray-700" />
+                                    <div class="aspect-3/4 bg-gray-200 dark:bg-gray-700" />
                                     <div class="p-5 space-y-3">
                                           <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
                                           <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
@@ -283,7 +283,7 @@ const formatPrice = (price: number) =>
                               <NuxtLink v-for="product in latestProducts" :key="product.id"
                                     :to="`/products/${product.slug}`"
                                     class="group relative bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-                                    <div class="aspect-[3/4] overflow-hidden relative bg-gray-100 dark:bg-gray-700">
+                                    <div class="aspect-3/4 overflow-hidden relative bg-gray-100 dark:bg-gray-700">
                                           <img v-if="getImageUrl(product.image_url)"
                                                 :src="getImageUrl(product.image_url)!" :alt="product.name"
                                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -490,7 +490,7 @@ const formatPrice = (price: number) =>
                                           <UIcon v-for="i in 5" :key="i" name="i-heroicons-star-solid"
                                                 class="w-6 h-6 text-yellow-400" />
                                     </div>
-                                    <span class="text-lg text-gray-600 dark:text-gray-400">4.9/5 sur 1 247 avis</span>
+                                    <span class="text-lg text-gray-600 dark:text-gray-400">4.3/5 sur 247 avis</span>
                               </div>
                         </div>
 
