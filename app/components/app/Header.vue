@@ -16,7 +16,7 @@ const toggleMobileMenu = () => {
       isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
 
-const fallbackNavigation: NavigationItem[] = [
+const Navigation: NavigationItem[] = [
       { label: 'Accueil', url: '/' },
       { label: 'Bylin', url: '/bylin' },
       { label: 'Boutique', url: '/products' },
@@ -25,7 +25,7 @@ const fallbackNavigation: NavigationItem[] = [
       { label: 'Contact', url: '/contact' },
 ]
 
-const displayNavigation = computed(() => props.navigation?.length ? fallbackNavigation : props.navigation)
+const displayNavigation = computed(() => Navigation)
 
 // User Dropdown
 const userMenuItems = computed(() => {

@@ -10,8 +10,12 @@ defineProps<{
       <nav class="hidden lg:block border-t border-primary-600 dark:border-primary-800">
             <ul class="flex justify-center gap-10 py-4">
                   <li v-for="(item, index) in navigation" :key="index" class="relative group">
-                        <NuxtLink :to="item.url"
-                              class="text-xs font-semibold uppercase tracking-wider text-white hover:text-primary-100 transition-colors pb-1 border-b-2 border-transparent hover:border-white">
+                        <NuxtLink :to="item.url" :class="[
+                              'text-xs font-semibold uppercase tracking-wider transition-all duration-300 pb-1',
+                              item.label === 'Bylin'
+                                    ? 'bg-white text-primary px-4 py-2 rounded-full shadow-md hover:bg-primary-50'
+                                    : 'text-white hover:text-primary-100 border-b-2 border-transparent hover:border-white'
+                        ]">
                               {{ item.label }}
                         </NuxtLink>
 
