@@ -350,7 +350,7 @@ const emit = defineEmits<{
 }>()
 
 const toast = useToast()
-const { isInWishlist, toggleWishlist } = useWishlist()
+const wishlist = useWishlist()
 
 const selectedSize = ref<string | null>(null)
 const selectedColor = ref<string | null>(null)
@@ -362,17 +362,30 @@ const showSpecs = ref(false)
 const showSizeGuide = ref(false)
 
 // Favorites
-const isFavorite = computed(() => isInWishlist(props.product.id))
+const isFavorite = computed(() => wishlist.isFavorite(props.product.id))
 
 const toggleFavorite = () => {
-  toggleWishlist(props.product.id)
+  const favorite = isFavorite.value
+
+  if (favorite) {
+    wishlist.items = wishlist.items.filter(
+      item => item.product_id !== props.product.id
+    )
+  } else {
+    wishlist.items.push({
+      id: props.product.id,
+      product_id: props.product.id,
+      product: props.product,
+    })
+  }
+
   toast.add({
-    title: isFavorite.value ? 'Retiré des favoris' : 'Ajouté aux favoris',
-    description: isFavorite.value 
+    title: favorite ? 'Retiré des favoris' : 'Ajouté aux favoris',
+    description: favorite
       ? `${props.product.name} a été retiré de vos favoris`
       : `${props.product.name} a été ajouté à vos favoris`,
-    color: isFavorite.value ? 'info' : 'success',
-    icon: isFavorite.value ? 'heroicons:heart' : 'heroicons:heart-solid',
+    color: favorite ? 'info' : 'success',
+    icon: favorite ? 'heroicons:heart' : 'heroicons:heart-solid',
   })
 }
 
