@@ -184,7 +184,7 @@ export default defineNuxtConfig({
       "/api/**": {
         proxy:
           process.env.NODE_ENV === "production"
-            ? `${process.env.NUXT_API_SECRET_URL}/**`
+            ? `${process.env.NUXT_API_SECRET_URL}/api/**`
             : undefined,
         headers: {
           Accept: "application/json",
