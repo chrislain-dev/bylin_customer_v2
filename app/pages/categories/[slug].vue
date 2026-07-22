@@ -13,7 +13,7 @@ const { data: category, error } = await useFetch<{ success: boolean; data: Categ
 )
 
 if (error.value) {
-  throw createError({ statusCode: 404, statusMessage: 'Catégorie introuvable' })
+  throw createError({ statusCode: 404, message: 'Catégorie introuvable', fatal: true })
 }
 
 const { data: productsResponse } = await useFetch<{ success: boolean; data: Product[] }>(

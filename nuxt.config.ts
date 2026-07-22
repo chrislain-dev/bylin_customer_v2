@@ -163,6 +163,10 @@ export default defineNuxtConfig({
   },
 
   nitro: {
+    prerender: {
+      routes: ["/legal/terms", "/legal/privacy", "/legal/mentions", "/legal/cookies"],
+    },
+
     devProxy: {
       "/api": {
         target: process.env.NUXT_API_SECRET_URL || "http://localhost:8000",
