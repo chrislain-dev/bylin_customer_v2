@@ -5,6 +5,7 @@
 .nitro
 .cache
 dist
+package-lock.json
 
 # Node dependencies
 node_modules
@@ -20,5 +21,6 @@ logs
 
 # Local env files
 .env
+.env.production
 # .env.*
 !.env.example
