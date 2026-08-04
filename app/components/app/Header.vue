@@ -104,7 +104,7 @@ const userMenuItems = computed(() => {
                               <!-- Search (Desktop) + Hidden on mobile/tablet -->
                               <UButton icon="i-heroicons-magnifying-glass" variant="ghost" color="neutral"
                                     class="hidden lg:flex text-white hover:text-black" label="Rechercher"
-                                    @click="isSearchOpen = true" />
+                                    @click="() => { isSearchOpen = true }" />
 
                               <!-- Logo (Center on mobile, left on desktop) -->
                               <NuxtLink to="/"
@@ -121,7 +121,7 @@ const userMenuItems = computed(() => {
                               <div class="flex items-center gap-1 sm:gap-2 lg:gap-3">
                                     <!-- Search (Mobile/Tablet) -->
                                     <UButton icon="i-heroicons-magnifying-glass" variant="ghost" color="neutral"
-                                          class="lg:hidden text-white hover:text-black" @click="isSearchOpen = true" />
+                                          class="lg:hidden text-white hover:text-black" @click="() => { isSearchOpen = true }" />
 
                                     <!-- User Menu -->
                                     <UDropdownMenu :items="userMenuItems" :popper="{ placement: 'bottom-end' }">
@@ -141,7 +141,7 @@ const userMenuItems = computed(() => {
                                     <!-- Dark Mode Toggle (Desktop only) -->
                                     <UButton :icon="colorMode.value === 'dark' ? 'i-heroicons-moon' : 'i-heroicons-sun'"
                                           color="neutral" variant="ghost"
-                                          @click="colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'"
+                                          @click="() => {colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'}"
                                           class="hidden lg:flex text-white hover:text-black" />
 
                                     <!-- Cart -->
