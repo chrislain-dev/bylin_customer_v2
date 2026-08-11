@@ -10,12 +10,16 @@
           </div>
           <div class="w-24 h-0.5 bg-gray-200 mx-4"></div>
           <div class="flex flex-col items-center opacity-50">
-            <div class="w-10 h-10 bg-white border-2 border-gray-200 text-gray-400 rounded-full flex items-center justify-center font-bold">2</div>
+            <div
+              class="w-10 h-10 bg-white border-2 border-gray-200 text-gray-400 rounded-full flex items-center justify-center font-bold">
+              2</div>
             <span class="text-sm font-medium mt-2">Paiement</span>
           </div>
           <div class="w-24 h-0.5 bg-gray-200 mx-4"></div>
           <div class="flex flex-col items-center opacity-50">
-            <div class="w-10 h-10 bg-white border-2 border-gray-200 text-gray-400 rounded-full flex items-center justify-center font-bold">3</div>
+            <div
+              class="w-10 h-10 bg-white border-2 border-gray-200 text-gray-400 rounded-full flex items-center justify-center font-bold">
+              3</div>
             <span class="text-sm font-medium mt-2">Confirmation</span>
           </div>
         </div>
@@ -26,11 +30,12 @@
         <div class="lg:col-span-2">
           <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
             <h2 class="text-2xl font-bold font-syne mb-6">Adresse de livraison</h2>
-            
+
             <form @submit.prevent="nextStep" class="space-y-6">
               <div class="grid md:grid-cols-2 gap-6">
                 <UFormField label="Prénom" required>
-                  <UInput v-model="checkoutStore.state.shippingAddress.first_name" size="lg" placeholder="Votre prénom" />
+                  <UInput v-model="checkoutStore.state.shippingAddress.first_name" size="lg"
+                    placeholder="Votre prénom" />
                 </UFormField>
                 <UFormField label="Nom" required>
                   <UInput v-model="checkoutStore.state.shippingAddress.last_name" size="lg" placeholder="Votre nom" />
@@ -39,7 +44,8 @@
 
               <div class="grid md:grid-cols-2 gap-6">
                 <UFormField label="Email" required>
-                  <UInput v-model="checkoutStore.state.shippingAddress.email" type="email" size="lg" placeholder="email@exemple.com" />
+                  <UInput v-model="checkoutStore.state.shippingAddress.email" type="email" size="lg"
+                    placeholder="email@exemple.com" />
                 </UFormField>
                 <UFormField label="Téléphone" required>
                   <UInput v-model="checkoutStore.state.shippingAddress.phone" size="lg" placeholder="+229 ..." />
@@ -47,7 +53,8 @@
               </div>
 
               <UFormField label="Adresse" required>
-                <UInput v-model="checkoutStore.state.shippingAddress.address_line1" size="lg" placeholder="Quartier, Rue, Maison..." />
+                <UInput v-model="checkoutStore.state.shippingAddress.address_line1" size="lg"
+                  placeholder="Quartier, Rue, Maison..." />
               </UFormField>
 
               <div class="grid md:grid-cols-2 gap-6">
@@ -89,7 +96,7 @@
                 </div>
               </div>
             </div>
-            
+
             <div class="border-t border-gray-200 pt-4 space-y-2">
               <div class="flex justify-between text-sm">
                 <span class="text-gray-600">Sous-total</span>
@@ -120,6 +127,12 @@ const route = useRoute()
 // Cahier des charges §9 : le bouton "Commander via WhatsApp" du panier
 // arrive ici avec ?channel=whatsapp
 onMounted(() => {
+  // Garde-fou : impossible d'entamer un checkout avec un panier vide
+  // (accès direct à l'URL, rafraîchissement après un vidage de panier, etc.)
+  if (cartStore.items.length === 0) {
+    router.replace('/cart')
+    return
+  }
   checkoutStore.setChannel(route.query.channel === 'whatsapp' ? 'whatsapp' : 'online')
 })
 

@@ -1,17 +1,15 @@
 <template>
   <div class="min-h-screen bg-[#FAFAFA] font-sans">
     <!-- Hero Section -->
-    <section
-      class="relative h-75 md:h-100 bg-linear-to-r from-[#1a1a1a] to-[#2a2a2a] overflow-hidden text-white">
+    <section class="relative h-75 md:h-100 bg-linear-to-r from-[#1a1a1a] to-[#2a2a2a] overflow-hidden text-white">
       <div class="absolute inset-0 flex flex-col justify-center px-8 md:px-16 z-10">
-        <h1 class="text-4xl md:text-6xl font-light mb-4 font-syne">Boutique non Bylin</h1>
+        <h1 class="text-4xl md:text-6xl font-light mb-4 font-syne">Boutique</h1>
         <p class="text-xl opacity-80 font-light max-w-xl">
-          Explorez les vêtements non Bylin sélectionnés pour compléter votre vestiaire.
+          Découvrez l'ensemble de nos collections : pièces signatures Bylin et sélection boutique.
         </p>
       </div>
       <!-- Decorative background element -->
-      <div
-        class="absolute top-0 right-0 w-1/2 h-full bg-[url('/images/pattern.svg')] opacity-5 pointer-events-none">
+      <div class="absolute top-0 right-0 w-1/2 h-full bg-[url('/images/pattern.svg')] opacity-5 pointer-events-none">
       </div>
     </section>
 
@@ -22,9 +20,11 @@
         <div>
           <nav class="flex text-sm text-gray-500 mb-2" aria-label="Breadcrumb">
             <ol class="flex items-center space-x-2">
-              <li><NuxtLink to="/" class="hover:text-black transition-colors">Accueil</NuxtLink></li>
+              <li>
+                <NuxtLink to="/" class="hover:text-black transition-colors">Accueil</NuxtLink>
+              </li>
               <li><span class="text-gray-300">/</span></li>
-              <li class="font-medium text-black">Boutique non Bylin</li>
+              <li class="font-medium text-black">Boutique</li>
             </ol>
           </nav>
           <div class="flex items-baseline gap-3">
@@ -47,17 +47,15 @@
       <div class="flex flex-col lg:flex-row gap-12">
         <!-- Sidebar Filters (Desktop) -->
         <aside class="hidden lg:block w-72 shrink-0 space-y-10">
-          
+
           <!-- Categories -->
           <div>
             <h3 class="font-syne font-bold text-lg mb-4">Catégories</h3>
             <ul class="space-y-2">
               <li v-for="cat in categories" :key="cat.id || 'all'">
-                <button
-                  @click="selectCategory(cat.id)"
+                <button @click="selectCategory(cat.id)"
                   class="text-sm transition-colors hover:text-[#0066bf] flex items-center justify-between w-full text-left py-1"
-                  :class="selectedCategory === cat.id ? 'text-[#0066bf] font-medium' : 'text-gray-600'"
-                >
+                  :class="selectedCategory === cat.id ? 'text-[#0066bf] font-medium' : 'text-gray-600'">
                   {{ cat.name }}
                   <span v-if="selectedCategory === cat.id" class="w-1.5 h-1.5 rounded-full bg-[#0066bf]"></span>
                 </button>
@@ -75,7 +73,7 @@
                 <input v-model.number="priceRange.max" type="number" placeholder="Max"
                   class="w-full px-3 py-2 bg-white border border-gray-200 rounded text-sm focus:outline-none focus:border-black transition-colors" />
               </div>
-              <button @click="applyFilters" 
+              <button @click="applyFilters"
                 class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-xs font-bold uppercase tracking-wide rounded transition-colors text-gray-800">
                 Appliquer
               </button>
@@ -86,13 +84,11 @@
           <div v-if="colors.length > 0">
             <h3 class="font-syne font-bold text-lg mb-4">Couleurs</h3>
             <div class="flex flex-wrap gap-2">
-              <button v-for="color in colors" :key="color.id"
-                @click="toggleColor(color.name)"
+              <button v-for="color in colors" :key="color.id" @click="toggleColor(color.name)"
                 class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center transition-transform hover:scale-110 relative"
-                :class="{ 'ring-2 ring-offset-2 ring-black': selectedColors.includes(color.name) }"
-                :title="color.name"
-              >
-                <span class="w-6 h-6 rounded-full block border border-black/5" :style="{ backgroundColor: color.hex_code }"></span>
+                :class="{ 'ring-2 ring-offset-2 ring-black': selectedColors.includes(color.name) }" :title="color.name">
+                <span class="w-6 h-6 rounded-full block border border-black/5"
+                  :style="{ backgroundColor: color.hex_code }"></span>
               </button>
             </div>
           </div>
@@ -101,13 +97,10 @@
           <div v-if="sizes.length > 0">
             <h3 class="font-syne font-bold text-lg mb-4">Tailles</h3>
             <div class="grid grid-cols-4 gap-2">
-              <button v-for="size in sizes" :key="size.id"
-                @click="toggleSize(size.name)"
-                class="px-2 py-2 text-xs border rounded transition-all"
-                :class="selectedSizes.includes(size.name) 
-                  ? 'bg-black text-white border-black' 
-                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'"
-              >
+              <button v-for="size in sizes" :key="size.id" @click="toggleSize(size.name)"
+                class="px-2 py-2 text-xs border rounded transition-all" :class="selectedSizes.includes(size.name)
+                  ? 'bg-black text-white border-black'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'">
                 {{ size.name }}
               </button>
             </div>
@@ -120,13 +113,14 @@
               <li v-for="brand in brands" :key="brand.id || 'all-brands'">
                 <label class="flex items-center gap-3 cursor-pointer group">
                   <div class="relative flex items-center">
-                    <input type="checkbox" 
-                      :checked="selectedBrand === brand.id"
-                      @change="selectBrand(brand.id)"
-                      class="peer h-4 w-4 opacity-0 absolute" 
-                    />
-                    <div class="w-4 h-4 border border-gray-300 rounded peer-checked:bg-black peer-checked:border-black transition-all"></div>
-                    <svg class="w-3 h-3 text-white absolute top-0.5 left-0.5 opacity-0 peer-checked:opacity-100 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <input type="checkbox" :checked="selectedBrand === brand.id" @change="selectBrand(brand.id)"
+                      class="peer h-4 w-4 opacity-0 absolute" />
+                    <div
+                      class="w-4 h-4 border border-gray-300 rounded peer-checked:bg-black peer-checked:border-black transition-all">
+                    </div>
+                    <svg
+                      class="w-3 h-3 text-white absolute top-0.5 left-0.5 opacity-0 peer-checked:opacity-100 pointer-events-none"
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
@@ -137,29 +131,23 @@
           </div>
         </aside>
 
-          <!-- Product Grid -->
+        <!-- Product Grid -->
         <main class="flex-1">
           <!-- Top Bar -->
           <div class="flex items-center justify-between mb-6">
-             <div class="flex items-center gap-2">
-              <button 
-                @click="viewMode = 'grid'"
-                class="p-2 rounded transition-colors"
-                :class="viewMode === 'grid' ? 'bg-black text-white' : 'bg-gray-100 text-gray-400 hover:text-black'"
-              >
+            <div class="flex items-center gap-2">
+              <button @click="viewMode = 'grid'" class="p-2 rounded transition-colors"
+                :class="viewMode === 'grid' ? 'bg-black text-white' : 'bg-gray-100 text-gray-400 hover:text-black'">
                 <Icon name="heroicons:squares-2x2" class="w-5 h-5" />
               </button>
-              <button 
-                @click="viewMode = 'list'"
-                class="p-2 rounded transition-colors"
-                :class="viewMode === 'list' ? 'bg-black text-white' : 'bg-gray-100 text-gray-400 hover:text-black'"
-              >
+              <button @click="viewMode = 'list'" class="p-2 rounded transition-colors"
+                :class="viewMode === 'list' ? 'bg-black text-white' : 'bg-gray-100 text-gray-400 hover:text-black'">
                 <Icon name="heroicons:list-bullet" class="w-5 h-5" />
               </button>
             </div>
 
             <div class="relative w-48">
-              <select v-model="selectedSort" 
+              <select v-model="selectedSort"
                 class="w-full appearance-none bg-transparent border-b border-gray-200 py-2 pr-8 text-sm font-medium focus:outline-none cursor-pointer">
                 <option v-for="opt in sortOptions" :key="opt.value" :value="opt.value">
                   Tri: {{ opt.label }}
@@ -188,13 +176,8 @@
           </div>
 
           <!-- Products Grid -->
-          <ProductGrid 
-            v-if="products.length > 0"
-            :products="products"
-            :view-mode="viewMode"
-            :columns="4"
-            @open-quickview="openQuickView"
-          />
+          <ProductGrid v-if="products.length > 0" :products="products" :view-mode="viewMode" :columns="4"
+            @open-quickview="openQuickView" />
 
           <!-- Empty State -->
           <div v-else class="text-center py-20">
@@ -202,8 +185,9 @@
               <Icon name="heroicons:shopping-bag" class="w-10 h-10 text-gray-300" />
             </div>
             <h3 class="text-2xl font-bold text-gray-900 mb-2">Aucun produit trouvé</h3>
-            <p class="text-gray-500 mb-8 max-w-md mx-auto">Nous n'avons trouvé aucun produit correspondant à vos critères.</p>
-            <button @click="resetFilters" 
+            <p class="text-gray-500 mb-8 max-w-md mx-auto">Nous n'avons trouvé aucun produit correspondant à vos
+              critères.</p>
+            <button @click="resetFilters"
               class="px-8 py-3 bg-black text-white rounded-lg text-sm font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors">
               Réinitialiser les filtres
             </button>
@@ -212,32 +196,25 @@
           <!-- Pagination -->
           <div v-if="pagination && pagination.last_page > 1" class="mt-16 flex justify-center">
             <div class="flex items-center gap-2">
-              <button 
-                @click="changePage(pagination!.current_page - 1)"
-                :disabled="pagination.current_page === 1"
-                class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded hover:border-black hover:bg-gray-50 transition-colors disabled:opacity-30 disabled:hover:border-gray-200"
-              >
+              <button @click="changePage(pagination!.current_page - 1)" :disabled="pagination.current_page === 1"
+                class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded hover:border-black hover:bg-gray-50 transition-colors disabled:opacity-30 disabled:hover:border-gray-200">
                 <Icon name="heroicons:chevron-left" class="w-4 h-4" />
               </button>
 
               <div class="flex items-center gap-1">
                 <template v-for="page in getVisiblePages(pagination.current_page, pagination.last_page)" :key="page">
                   <span v-if="page === '...'" class="w-10 text-center text-gray-400">...</span>
-                  <button v-else
-                    @click="changePage(page as number)"
+                  <button v-else @click="changePage(page as number)"
                     class="w-10 h-10 flex items-center justify-center rounded text-sm font-medium transition-colors"
-                    :class="page === pagination!.current_page ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100'"
-                  >
+                    :class="page === pagination!.current_page ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100'">
                     {{ page }}
                   </button>
                 </template>
               </div>
 
-              <button 
-                @click="changePage(pagination!.current_page + 1)"
+              <button @click="changePage(pagination!.current_page + 1)"
                 :disabled="pagination.current_page === pagination.last_page"
-                class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded hover:border-black hover:bg-gray-50 transition-colors disabled:opacity-30 disabled:hover:border-gray-200"
-              >
+                class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded hover:border-black hover:bg-gray-50 transition-colors disabled:opacity-30 disabled:hover:border-gray-200">
                 <Icon name="heroicons:chevron-right" class="w-4 h-4" />
               </button>
             </div>
@@ -249,24 +226,24 @@
     <!-- Mobile Filters Drawer -->
     <div v-if="showMobileFilters" class="fixed inset-0 z-50 lg:hidden font-sans">
       <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showMobileFilters = false"></div>
-      <div class="absolute inset-y-0 right-0 max-w-xs w-full bg-white shadow-xl flex flex-col transform transition-transform duration-300">
+      <div
+        class="absolute inset-y-0 right-0 max-w-xs w-full bg-white shadow-xl flex flex-col transform transition-transform duration-300">
         <div class="flex items-center justify-between p-4 border-b">
           <h3 class="text-lg font-bold font-syne">Filtres</h3>
           <button @click="showMobileFilters = false" class="p-2 hover:bg-gray-100 rounded-full">
             <Icon name="heroicons:x-mark" class="w-6 h-6" />
           </button>
         </div>
-        
+
         <div class="flex-1 overflow-y-auto p-4 space-y-8">
           <!-- Categories -->
           <div>
             <h4 class="font-bold mb-3">Catégories</h4>
             <ul class="space-y-2">
               <li v-for="cat in categories" :key="cat.id || 'mob-all'">
-                <button @click="selectCategory(cat.id); showMobileFilters=false"
+                <button @click="selectCategory(cat.id); showMobileFilters = false"
                   class="w-full text-left py-2 px-3 rounded text-sm"
-                  :class="selectedCategory === cat.id ? 'bg-gray-100 font-medium' : 'text-gray-600'"
-                >
+                  :class="selectedCategory === cat.id ? 'bg-gray-100 font-medium' : 'text-gray-600'">
                   {{ cat.name }}
                 </button>
               </li>
@@ -290,13 +267,11 @@
           <div v-if="colors.length > 0">
             <h4 class="font-bold mb-3">Couleurs</h4>
             <div class="flex flex-wrap gap-2">
-              <button v-for="color in colors" :key="color.id"
-                @click="toggleColor(color.name)"
+              <button v-for="color in colors" :key="color.id" @click="toggleColor(color.name)"
                 class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center transition-transform hover:scale-110 relative"
-                :class="{ 'ring-2 ring-offset-2 ring-black': selectedColors.includes(color.name) }"
-                :title="color.name"
-              >
-                <span class="w-6 h-6 rounded-full block border border-black/5" :style="{ backgroundColor: color.hex_code }"></span>
+                :class="{ 'ring-2 ring-offset-2 ring-black': selectedColors.includes(color.name) }" :title="color.name">
+                <span class="w-6 h-6 rounded-full block border border-black/5"
+                  :style="{ backgroundColor: color.hex_code }"></span>
               </button>
             </div>
           </div>
@@ -305,13 +280,10 @@
           <div v-if="sizes.length > 0">
             <h4 class="font-bold mb-3">Tailles</h4>
             <div class="grid grid-cols-4 gap-2">
-              <button v-for="size in sizes" :key="size.id"
-                @click="toggleSize(size.name)"
-                class="px-2 py-2 text-xs border rounded transition-all"
-                :class="selectedSizes.includes(size.name) 
-                  ? 'bg-black text-white border-black' 
-                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'"
-              >
+              <button v-for="size in sizes" :key="size.id" @click="toggleSize(size.name)"
+                class="px-2 py-2 text-xs border rounded transition-all" :class="selectedSizes.includes(size.name)
+                  ? 'bg-black text-white border-black'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'">
                 {{ size.name }}
               </button>
             </div>
@@ -324,13 +296,14 @@
               <li v-for="brand in brands" :key="brand.id || 'mob-all-brands'">
                 <label class="flex items-center gap-3 cursor-pointer group">
                   <div class="relative flex items-center">
-                    <input type="checkbox" 
-                      :checked="selectedBrand === brand.id"
-                      @change="selectBrand(brand.id)"
-                      class="peer h-4 w-4 opacity-0 absolute" 
-                    />
-                    <div class="w-4 h-4 border border-gray-300 rounded peer-checked:bg-black peer-checked:border-black transition-all"></div>
-                    <svg class="w-3 h-3 text-white absolute top-0.5 left-0.5 opacity-0 peer-checked:opacity-100 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <input type="checkbox" :checked="selectedBrand === brand.id" @change="selectBrand(brand.id)"
+                      class="peer h-4 w-4 opacity-0 absolute" />
+                    <div
+                      class="w-4 h-4 border border-gray-300 rounded peer-checked:bg-black peer-checked:border-black transition-all">
+                    </div>
+                    <svg
+                      class="w-3 h-3 text-white absolute top-0.5 left-0.5 opacity-0 peer-checked:opacity-100 pointer-events-none"
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
@@ -343,17 +316,15 @@
 
 
         <div class="p-4 border-t bg-gray-50">
-          <button @click="resetFilters" class="w-full py-3 border border-black text-black rounded mb-2 text-sm font-bold uppercase">Réinitialiser</button>
-          <button @click="showMobileFilters = false" class="w-full py-3 bg-black text-white rounded text-sm font-bold uppercase">Voir les résultats</button>
+          <button @click="resetFilters"
+            class="w-full py-3 border border-black text-black rounded mb-2 text-sm font-bold uppercase">Réinitialiser</button>
+          <button @click="showMobileFilters = false"
+            class="w-full py-3 bg-black text-white rounded text-sm font-bold uppercase">Voir les résultats</button>
         </div>
       </div>
     </div>
     <!-- Quick View Modal -->
-    <ProductQuickView 
-      v-model:open="showQuickView"
-      v-model:product="quickViewProduct"
-      @add-to-cart="handleAddToCart"
-    />
+    <ProductQuickView v-model:open="showQuickView" v-model:product="quickViewProduct" @add-to-cart="handleAddToCart" />
   </div>
 </template>
 
@@ -437,8 +408,7 @@ const fetch = async (page = 1) => {
     sort_by: sortBy,
     sort_order: sortOrder,
     colors: selectedColors.value,
-    sizes: selectedSizes.value,
-    exclude_bylin: true
+    sizes: selectedSizes.value
   })
 }
 
@@ -520,11 +490,13 @@ onMounted(() => {
 })
 
 useHead({
-  title: 'Boutique non Bylin - Bylin',
-  meta: [{ name: 'description', content: 'Découvrez les vêtements non Bylin disponibles dans la boutique.' }]
+  title: 'Boutique - Bylin',
+  meta: [{ name: 'description', content: 'Découvrez toutes les collections Bylin et notre sélection boutique : blazers, complets en lin, chemises, cardigans, accessoires...' }]
 })
 </script>
 
 <style scoped>
-.font-syne { font-family: 'Syne', sans-serif; }
+.font-syne {
+  font-family: 'Syne', sans-serif;
+}
 </style>

@@ -15,7 +15,9 @@
           </div>
           <div class="w-24 h-0.5 bg-gray-200 mx-4"></div>
           <div class="flex flex-col items-center opacity-50">
-            <div class="w-10 h-10 bg-white border-2 border-gray-200 text-gray-400 rounded-full flex items-center justify-center font-bold">3</div>
+            <div
+              class="w-10 h-10 bg-white border-2 border-gray-200 text-gray-400 rounded-full flex items-center justify-center font-bold">
+              3</div>
             <span class="text-sm font-medium mt-2">Confirmation</span>
           </div>
         </div>
@@ -26,13 +28,12 @@
         <div class="lg:col-span-2">
           <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
             <h2 class="text-2xl font-bold font-syne mb-6">Moyen de paiement</h2>
-            
+
             <div class="space-y-4">
               <!-- WhatsApp — Cahier des charges §9 : Option 1 -->
               <label class="flex items-start gap-4 p-6 border rounded-xl cursor-pointer transition-all"
                 :class="checkoutStore.state.paymentMethod === 'whatsapp' ? 'border-[#25D366] bg-green-50 ring-1 ring-[#25D366]' : 'border-gray-200 hover:border-gray-300'">
-                <input type="radio" name="payment" value="whatsapp" 
-                  v-model="checkoutStore.state.paymentMethod"
+                <input type="radio" name="payment" value="whatsapp" v-model="checkoutStore.state.paymentMethod"
                   class="mt-1 w-4 h-4 text-green-600 focus:ring-green-500 border-gray-300">
                 <div class="flex-1">
                   <span class="font-bold block mb-1">🟢 Commander via WhatsApp</span>
@@ -47,8 +48,7 @@
               <!-- FedaPay — Cahier des charges §9 : Option 2 -->
               <label class="flex items-start gap-4 p-6 border rounded-xl cursor-pointer transition-all"
                 :class="checkoutStore.state.paymentMethod === 'fedapay' ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500' : 'border-gray-200 hover:border-gray-300'">
-                <input type="radio" name="payment" value="fedapay" 
-                  v-model="checkoutStore.state.paymentMethod"
+                <input type="radio" name="payment" value="fedapay" v-model="checkoutStore.state.paymentMethod"
                   class="mt-1 w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300">
                 <div class="flex-1">
                   <div class="flex justify-between items-center mb-1">
@@ -88,14 +88,15 @@
         <div class="lg:col-span-1">
           <div class="bg-gray-50 rounded-2xl p-6 sticky top-24">
             <h3 class="font-bold text-lg mb-4">Récapitulatif</h3>
-            
+
             <div class="space-y-3 pb-6 border-b border-gray-200 text-sm">
               <div class="flex justify-between">
                 <span class="text-gray-600">Adresse de livraison</span>
                 <NuxtLink to="/checkout" class="text-primary-600 hover:underline">Modifier</NuxtLink>
               </div>
               <p class="font-medium text-gray-800">
-                {{ checkoutStore.state.shippingAddress.first_name }} {{ checkoutStore.state.shippingAddress.last_name }}<br>
+                {{ checkoutStore.state.shippingAddress.first_name }} {{ checkoutStore.state.shippingAddress.last_name
+                }}<br>
                 {{ checkoutStore.state.shippingAddress.address_line1 }}<br>
                 {{ checkoutStore.state.shippingAddress.city }}<br>
                 {{ checkoutStore.state.shippingAddress.phone }}
@@ -103,9 +104,9 @@
             </div>
 
             <div class="py-4 border-b border-gray-200">
-               <div v-for="item in cartStore.items" :key="item.id" class="flex gap-4 mb-4 last:mb-0">
+              <div v-for="item in cartStore.items" :key="item.id" class="flex gap-4 mb-4 last:mb-0">
                 <div class="w-12 h-12 bg-white rounded border border-gray-200 flex-shrink-0 overflow-hidden">
-                   <img :src="item.product.media?.[0]?.original_url" class="w-full h-full object-cover">
+                  <img :src="item.product.media?.[0]?.original_url" class="w-full h-full object-cover">
                 </div>
                 <div class="flex-1 text-sm">
                   <div class="flex justify-between">
@@ -159,6 +160,11 @@ const isWhatsapp = computed(() => checkoutStore.state.paymentMethod === 'whatsap
 // Redirect if step 1 not valid + preselect WhatsApp if the customer
 // came from the green cart button (cahier §9)
 onMounted(() => {
+  // Garde-fou : panier vide (accès direct à l'URL, rafraîchissement...)
+  if (cartStore.items.length === 0) {
+    router.replace('/cart')
+    return
+  }
   if (!checkoutStore.validateShippingStep()) {
     router.push('/checkout')
     return
@@ -169,10 +175,19 @@ onMounted(() => {
 })
 
 const processPayment = async () => {
+  const whatsapp = isWhatsapp.value
+
+  // IMPORTANT : window.open() doit être appelé de façon SYNCHRONE, dans le même
+  // "tick" que le clic utilisateur, sinon la plupart des navigateurs bloquent la
+  // popup silencieusement (dès qu'on passe par un await, le geste utilisateur
+  // n'est plus considéré comme actif). On ouvre donc un onglet vide tout de suite
+  // et on ne fixe son URL qu'une fois la commande créée. Si le navigateur bloque
+  // quand même la popup, whatsappWindow vaut null : on affichera un lien cliquable
+  // de secours sur la page de succès plutôt que de faire échouer le parcours.
+  const whatsappWindow = whatsapp ? window.open('', '_blank') : null
+
   processing.value = true
   try {
-    const whatsapp = isWhatsapp.value
-
     const payload = {
       shipping_address: checkoutStore.state.shippingAddress,
       billing_address: checkoutStore.state.useBillingAsShipping ? checkoutStore.state.shippingAddress : checkoutStore.state.billingAddress,
@@ -184,31 +199,40 @@ const processPayment = async () => {
     }
 
     const response = await orderStore.createOrder(payload)
-    const order: any = response.data
+    const order = response.data
 
     // Le backend a déjà vidé le panier serveur lors de la création
     // de la commande : on ne vide que l'état local.
     await cartStore.clear({ skipBackend: true })
     checkoutStore.reset()
 
-    if (whatsapp && order?.metadata?.whatsapp_url) {
-      // Cahier §9 : ouvre WhatsApp avec le message pré-rempli
-      window.open(order.metadata.whatsapp_url, '_blank')
-      await router.push({ path: '/checkout/success', query: { channel: 'whatsapp', order: order.order_number } })
-    } else if (!whatsapp && order?.payment_url) {
-      // Redirection FedaPay
-      window.location.href = order.payment_url
-    } else if (!whatsapp && order?.metadata?.payment_url) {
+    if (whatsapp) {
+      const waUrl = order?.metadata?.whatsapp_url
+      if (waUrl && whatsappWindow) {
+        // Cahier §9 : ouvre WhatsApp avec le message pré-rempli
+        whatsappWindow.location.href = waUrl
+      } else if (whatsappWindow) {
+        whatsappWindow.close()
+      }
+      await router.push({
+        path: '/checkout/success',
+        query: { channel: 'whatsapp', order: order.id, whatsapp_url: waUrl || '' }
+      })
+    } else if (order?.metadata?.payment_url) {
+      // Redirection vers la page de paiement hébergée FedaPay
       window.location.href = order.metadata.payment_url
     } else {
-      await router.push({ path: '/checkout/success', query: order?.order_number ? { order: order.order_number } : {} })
+      // Paiement sans redirection nécessaire (ex: gateway manuel) : on renvoie
+      // vers la page de retour qui revérifie le vrai statut via l'API.
+      await router.push({ path: '/checkout/return', query: order?.id ? { order_id: order.id } : {} })
     }
 
   } catch (error: any) {
+    if (whatsappWindow) whatsappWindow.close()
     console.error('Payment processing error:', error)
     toast.add({
       title: 'Erreur',
-      description: error.response?._data?.message || 'Une erreur est survenue lors de la commande',
+      description: error.response?._data?.message || error.data?.message || 'Une erreur est survenue lors de la commande',
       color: 'error'
     })
   } finally {

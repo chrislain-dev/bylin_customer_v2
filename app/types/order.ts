@@ -1,6 +1,25 @@
-export type OrderStatus = "pending" | "processing" | "confirmed" | "shipped" | "delivered" | "cancelled" | "refunded";
-export type PaymentStatus = "pending" | "authorized" | "paid" | "partially_paid" | "failed" | "refunded" | "partially_refunded";
-export type PaymentMethod = "fedapay" | "cash" | "manual" | "card" | "mobile_money";
+export type OrderStatus =
+  | "pending"
+  | "processing"
+  | "confirmed"
+  | "shipped"
+  | "delivered"
+  | "cancelled"
+  | "refunded";
+export type PaymentStatus =
+  | "pending"
+  | "authorized"
+  | "paid"
+  | "partially_paid"
+  | "failed"
+  | "refunded"
+  | "partially_refunded";
+export type PaymentMethod =
+  | "fedapay"
+  | "cash"
+  | "manual"
+  | "card"
+  | "mobile_money";
 export type ShippingMethod = "standard" | "express" | "pickup";
 
 export interface Address {
@@ -32,11 +51,21 @@ export interface Order {
   order_number: string;
   status: string;
   payment_status: string;
+  channel?: "online" | "whatsapp";
   total: number;
   created_at: string;
   items: OrderItem[];
   shipping_address: Address;
-  payment_url?: string | null;
+  // Rempli côté backend selon le canal :
+  // - whatsapp : { whatsapp_url }
+  // - online (FedaPay) : { payment_url, payment_token, transaction_reference }
+  metadata?: {
+    whatsapp_url?: string;
+    payment_url?: string;
+    payment_token?: string;
+    transaction_reference?: string;
+    [key: string]: unknown;
+  } | null;
 }
 
 export interface CheckoutState {

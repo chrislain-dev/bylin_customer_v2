@@ -16,7 +16,7 @@ export default defineNuxtConfig({
     "nuxt-auth-sanctum",
     "nuxt-vue3-google-signin",
     "@nuxt/image",
-    "@vercel/analytics"
+    // "@vercel/analytics"
   ],
 
   icon: {
