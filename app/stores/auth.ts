@@ -15,7 +15,7 @@ export const useAuthStore = defineStore("auth", () => {
   const isAuthenticated = computed(() => !!user.value);
   const loading = ref(false);
 
-  async function login(credentials: { email: string; password: string }) {
+  async function login(credentials: { email: string; password: string; remember?: boolean }) {
     loading.value = true;
     try {
       await sanctumLogin(credentials);

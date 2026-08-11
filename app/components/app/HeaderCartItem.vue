@@ -14,7 +14,7 @@ const hasImage = computed(() => !!imageUrl.value)
 <template>
       <div class="flex gap-4 py-3">
             <!-- Image avec placeholder -->
-            <div class="w-20 h-20 rounded-lg flex-shrink-0 overflow-hidden bg-gray-100 dark:bg-gray-800">
+            <div class="w-20 h-20 rounded-lg shrink-0 overflow-hidden bg-gray-100 dark:bg-gray-800">
                   <img 
                         v-if="hasImage" 
                         :src="imageUrl" 

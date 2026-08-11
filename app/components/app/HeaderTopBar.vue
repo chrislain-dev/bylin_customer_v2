@@ -10,6 +10,7 @@
 
                         <div class="flex items-center gap-6 text-primary-600 dark:text-primary-400">
                               <span class="font-medium">FR / Bénin</span>
+                              <span class="font-medium">+229 01 52 01 04 42</span>
                               <NuxtLink to="/about"
                                     class="hover:text-primary-900 dark:hover:text-primary-100 transition-colors">
                                     À propos

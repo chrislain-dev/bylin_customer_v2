@@ -131,9 +131,10 @@ const userMenuItems = computed(() => {
                                                 color="neutral" variant="ghost"
                                                 :label="authStore.isAuthenticated ? authStore.user?.first_name : undefined"
                                                 class="hidden lg:flex text-white hover:text-black" />
-                                          <!-- Mobile/Tablet without label -->
+                                          <!-- Mobile/Tablet with label -->
                                           <UButton
                                                 :icon="authStore.isAuthenticated ? 'i-heroicons-user-circle' : 'i-heroicons-user'"
+                                                :label="authStore.isAuthenticated ? authStore.user?.first_name : 'Compte'"
                                                 color="neutral" variant="ghost"
                                                 class="lg:hidden text-white hover:text-black" />
                                     </UDropdownMenu>

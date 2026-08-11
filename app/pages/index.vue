@@ -42,18 +42,18 @@ const bestOffer = computed(() => homeContent.value?.best_offer || null)
 // ─── HERO SLIDER ──────────────────────────────────────────────────────────────
 
 const heroSlides = [
+      // {
+      //       id: 1,
+      //       title: "L'Élégance signée Bylin",
+      //       subtitle: 'Créé à Cotonou',
+      //       description:
+      //             "Des coupes contemporaines, une âme africaine. Chaque pièce est pensée et confectionnée au Bénin.",
+      //       image: '/images/IMG_0062.jpg',
+      //       cta: 'Découvrir la marque',
+      //       ctaLink: '/bylin',
+      // },
       {
             id: 1,
-            title: "L'Élégance signée Bylin",
-            subtitle: 'Créé à Cotonou',
-            description:
-                  "Des coupes contemporaines, une âme africaine. Chaque pièce est pensée et confectionnée au Bénin.",
-            image: '/images/IMG_0062.jpg',
-            cta: 'Découvrir la marque',
-            ctaLink: '/bylin',
-      },
-      {
-            id: 2,
             title: 'Le Blazer, réinventé',
             subtitle: 'Savoir-faire local',
             description:
@@ -63,7 +63,7 @@ const heroSlides = [
             ctaLink: '/products',
       },
       {
-            id: 3,
+            id: 2,
             title: 'Entre Tradition & Modernité',
             subtitle: 'Collections Bylin',
             description:

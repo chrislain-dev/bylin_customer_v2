@@ -14,7 +14,6 @@ export default defineNuxtConfig({
     "pinia-plugin-persistedstate/nuxt",
     "@vueuse/nuxt",
     "nuxt-auth-sanctum",
-    "nuxt-vue3-google-signin",
     "@nuxt/image",
     // "@vercel/analytics"
   ],
@@ -34,10 +33,6 @@ export default defineNuxtConfig({
         "lucide:x",
       ],
     },
-  },
-
-  googleSignIn: {
-    clientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID || "",
   },
 
   sanctum: {
