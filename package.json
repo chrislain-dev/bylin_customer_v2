@@ -15,7 +15,7 @@
     "@nuxt/fonts": "^0.12.1",
     "@nuxt/icon": "^2.2.0",
     "@nuxt/ui": "^4.2.1",
-    "@pinia/nuxt": "^0.11.3",
+    "@pinia/nuxt": "^1.0.1",
     "@studio-freight/lenis": "^1.0.42",
     "@vercel/analytics": "^1.6.1",
     "@vueuse/nuxt": "^14.1.0",
